@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/matthias/Projects/cpp/CFD/build/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

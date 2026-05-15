@@ -1,0 +1,26 @@
+[
+{
+  "directory": "/home/matthias/Projects/cpp/CFD/build",
+  "command": "/usr/bin/c++  -I/home/matthias/Projects/cpp/CFD/src -I/home/matthias/Projects/cpp/CFD/eigen -std=gnu++20 -o CMakeFiles/cfd.dir/src/main.cpp.o -c /home/matthias/Projects/cpp/CFD/src/main.cpp",
+  "file": "/home/matthias/Projects/cpp/CFD/src/main.cpp",
+  "output": "CMakeFiles/cfd.dir/src/main.cpp.o"
+},
+{
+  "directory": "/home/matthias/Projects/cpp/CFD/build",
+  "command": "/usr/bin/c++  -I/home/matthias/Projects/cpp/CFD/src -I/home/matthias/Projects/cpp/CFD/eigen -std=gnu++20 -o CMakeFiles/cfd.dir/src/graphics/renderer.cpp.o -c /home/matthias/Projects/cpp/CFD/src/graphics/renderer.cpp",
+  "file": "/home/matthias/Projects/cpp/CFD/src/graphics/renderer.cpp",
+  "output": "CMakeFiles/cfd.dir/src/graphics/renderer.cpp.o"
+},
+{
+  "directory": "/home/matthias/Projects/cpp/CFD/build",
+  "command": "/usr/bin/c++  -I/home/matthias/Projects/cpp/CFD/src -I/home/matthias/Projects/cpp/CFD/eigen -std=gnu++20 -o CMakeFiles/cfd.dir/src/engine/engine.cpp.o -c /home/matthias/Projects/cpp/CFD/src/engine/engine.cpp",
+  "file": "/home/matthias/Projects/cpp/CFD/src/engine/engine.cpp",
+  "output": "CMakeFiles/cfd.dir/src/engine/engine.cpp.o"
+},
+{
+  "directory": "/home/matthias/Projects/cpp/CFD/build",
+  "command": "/usr/bin/c++  -I/home/matthias/Projects/cpp/CFD/src -I/home/matthias/Projects/cpp/CFD/eigen -std=gnu++20 -o CMakeFiles/cfd.dir/src/engine/grid.cpp.o -c /home/matthias/Projects/cpp/CFD/src/engine/grid.cpp",
+  "file": "/home/matthias/Projects/cpp/CFD/src/engine/grid.cpp",
+  "output": "CMakeFiles/cfd.dir/src/engine/grid.cpp.o"
+}
+]
