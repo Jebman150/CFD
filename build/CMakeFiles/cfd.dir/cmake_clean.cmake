@@ -4,6 +4,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/cfd.dir/src/engine/engine.cpp.o.d"
   "CMakeFiles/cfd.dir/src/engine/grid.cpp.o"
   "CMakeFiles/cfd.dir/src/engine/grid.cpp.o.d"
+  "CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.o"
+  "CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.o.d"
   "CMakeFiles/cfd.dir/src/graphics/renderer.cpp.o"
   "CMakeFiles/cfd.dir/src/graphics/renderer.cpp.o.d"
   "CMakeFiles/cfd.dir/src/main.cpp.o"

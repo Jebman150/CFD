@@ -9,7 +9,14 @@ class Renderer {
 
     GraphicalParameter parameter;
 
+    void drawCellOutline(Eigen::Vector2i dimensions);
     void drawPressureField(const Eigen::MatrixXd& gridValues);
+    void drawDivergenceField(const Grid& grid);
+    void drawXVelocityField(const Eigen::MatrixXd& gridValues);
+    void drawYVelocityField(const Eigen::MatrixXd& gridValues);
+
+    void drawVelocityFieldHR(const Grid& grid, sf::Vector2i res);
+    void drawPressureFieldHR(const Grid& grid, sf::Vector2i res);
 public:
     void initialize();
     void updateFrame(const Grid& grid);

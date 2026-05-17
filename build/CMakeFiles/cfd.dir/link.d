@@ -6,6 +6,7 @@ cfd: \
   CMakeFiles/cfd.dir/src/graphics/renderer.cpp.o \
   CMakeFiles/cfd.dir/src/engine/engine.cpp.o \
   CMakeFiles/cfd.dir/src/engine/grid.cpp.o \
+  CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.o \
   /usr/lib/libsfml-graphics.so.3.1.0 \
   /usr/lib/libsfml-window.so.3.1.0 \
   /usr/lib/libsfml-system.so.3.1.0 \
@@ -90,6 +91,8 @@ CMakeFiles/cfd.dir/src/graphics/renderer.cpp.o:
 CMakeFiles/cfd.dir/src/engine/engine.cpp.o:
 
 CMakeFiles/cfd.dir/src/engine/grid.cpp.o:
+
+CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.o:
 
 /usr/lib/libsfml-graphics.so.3.1.0:
 

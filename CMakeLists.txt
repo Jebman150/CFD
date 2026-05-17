@@ -12,6 +12,7 @@ add_executable(${PROJECT_NAME}
     src/graphics/renderer.cpp
     src/engine/engine.cpp
     src/engine/grid.cpp
+    src/engine/pressureSolver.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC

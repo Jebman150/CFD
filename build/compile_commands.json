@@ -22,5 +22,11 @@
   "command": "/usr/bin/c++  -I/home/matthias/Projects/cpp/CFD/src -I/home/matthias/Projects/cpp/CFD/eigen -std=gnu++20 -o CMakeFiles/cfd.dir/src/engine/grid.cpp.o -c /home/matthias/Projects/cpp/CFD/src/engine/grid.cpp",
   "file": "/home/matthias/Projects/cpp/CFD/src/engine/grid.cpp",
   "output": "CMakeFiles/cfd.dir/src/engine/grid.cpp.o"
+},
+{
+  "directory": "/home/matthias/Projects/cpp/CFD/build",
+  "command": "/usr/bin/c++  -I/home/matthias/Projects/cpp/CFD/src -I/home/matthias/Projects/cpp/CFD/eigen -std=gnu++20 -o CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.o -c /home/matthias/Projects/cpp/CFD/src/engine/pressureSolver.cpp",
+  "file": "/home/matthias/Projects/cpp/CFD/src/engine/pressureSolver.cpp",
+  "output": "CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.o"
 }
 ]

@@ -184,6 +184,30 @@ src/engine/grid.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/cfd.dir/build.make CMakeFiles/cfd.dir/src/engine/grid.cpp.s
 .PHONY : src/engine/grid.cpp.s
 
+src/engine/pressureSolver.o: src/engine/pressureSolver.cpp.o
+.PHONY : src/engine/pressureSolver.o
+
+# target to build an object file
+src/engine/pressureSolver.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cfd.dir/build.make CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.o
+.PHONY : src/engine/pressureSolver.cpp.o
+
+src/engine/pressureSolver.i: src/engine/pressureSolver.cpp.i
+.PHONY : src/engine/pressureSolver.i
+
+# target to preprocess a source file
+src/engine/pressureSolver.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cfd.dir/build.make CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.i
+.PHONY : src/engine/pressureSolver.cpp.i
+
+src/engine/pressureSolver.s: src/engine/pressureSolver.cpp.s
+.PHONY : src/engine/pressureSolver.s
+
+# target to generate assembly for a file
+src/engine/pressureSolver.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cfd.dir/build.make CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.s
+.PHONY : src/engine/pressureSolver.cpp.s
+
 src/graphics/renderer.o: src/graphics/renderer.cpp.o
 .PHONY : src/graphics/renderer.o
 
@@ -248,6 +272,9 @@ help:
 	@echo "... src/engine/grid.o"
 	@echo "... src/engine/grid.i"
 	@echo "... src/engine/grid.s"
+	@echo "... src/engine/pressureSolver.o"
+	@echo "... src/engine/pressureSolver.i"
+	@echo "... src/engine/pressureSolver.s"
 	@echo "... src/graphics/renderer.o"
 	@echo "... src/graphics/renderer.i"
 	@echo "... src/graphics/renderer.s"
