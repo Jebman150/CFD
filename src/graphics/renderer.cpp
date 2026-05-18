@@ -23,15 +23,27 @@ void Renderer::updateFrame(const Grid& grid) {
             window.close();
     }
 
+    drawCoordinateSystem();
     //drawPressureField(grid.getPressureValues());
     //drawDivergenceField(grid);
-    //drawCellOutline({grid.getWidth(), grid.getHeight()});
-    //drawXVelocityField(grid.getVelocityXValues());
-    //drawYVelocityField(grid.getVelocityYValues());
-    drawPressureFieldHR(grid, {100, 100});
+    drawCellOutline(grid.getDimensions(Axis::Z));
+    //drawVelocityPlane(grid);
+    //drawPressureFieldHR(grid, {100, 100});
     drawVelocityFieldHR(grid, {50, 50});
 
     window.display();
+}
+
+void Renderer::drawCoordinateSystem() {
+    sf::Vertex axis[] = {
+        {parameter.targetRect.position / 2.f, parameter.xAxis},
+        {parameter.targetRect.position / 2.f + sf::Vector2f{20, 0}, parameter.xAxis},
+        {parameter.targetRect.position / 2.f, parameter.yAxis},
+        {parameter.targetRect.position / 2.f + sf::Vector2f{0, 20}, parameter.yAxis},
+        {parameter.targetRect.position / 2.f, parameter.zAxis},
+        {parameter.targetRect.position / 2.f + sf::Vector2f{10, 10}, parameter.zAxis}
+    };
+    window.draw(axis, 6, sf::PrimitiveType::Lines);
 }
 
 /*
@@ -100,51 +112,32 @@ void Renderer::drawDivergenceField(const Grid& grid) {
 }
 
 /*
-    Draws the given velocity field in the x direction.
-
-    @param gridValues
-        Matrix of velocity values
+    Draws the velocities of the z plane in the grid
 */
-void Renderer::drawXVelocityField(const Eigen::MatrixXd& gridValues) {
-    sf::Vector2i gridSize = {static_cast<int>(gridValues.rows() - 1), static_cast<int>(gridValues.cols())};
+void Renderer::drawVelocityPlane(const Grid& grid) {
+    sf::Vector2i gridSize = {grid.getDimensions(Axis::Z).x(), grid.getDimensions(Axis::Z).y()};
     sf::Vector2f cellSize = {parameter.targetRect.size.x / float(gridSize.x), parameter.targetRect.size.y / float(gridSize.y)};
-    sf::Vector2f offset = {0, cellSize.y / 2.f};
 
-
-    for(int x = 0; x < (gridSize.x + 1); x++) {
-        for(int y = 0; y < gridSize.y; y++) {
-            float value = gridValues(x, y);
-            auto rect = sf::RectangleShape({value * 40, 5});
-            rect.setFillColor(parameter.velocityColor.eval(value));
-            rect.setPosition(parameter.targetRect.position + offset + sf::Vector2f{x*cellSize.x, y*cellSize.y});
-
-            window.draw(rect);
+    Plane plane = {Axis::Z, 0};
+    grid.forEachTangentVelocity(plane, [this, cellSize](ConstFaceView face) {
+        sf::Vector2f size(10, 10);
+        sf::Vector2f offset(-5, -5);
+        switch(face.axis) {
+            case Axis::X: 
+                size = {face.value * 40, 5.f};
+                offset = {0, cellSize.y * 0.5f};
+                break;
+            case Axis::Y: 
+                size = {5.f, face.value * 40}; 
+                offset = {cellSize.x * 0.5f, 0};
+                break;
         }
-    }
-}
+        auto rect = sf::RectangleShape(size);
+        rect.setFillColor(parameter.velocityColor.eval(face.value));
+        rect.setPosition(parameter.targetRect.position + offset + sf::Vector2f{face.idx.i*cellSize.x, face.idx.j*cellSize.y});
 
-/*
-    Draws the given velocity field in the y direction.
-
-    @param gridValues
-        Matrix of velocity values
-*/
-void Renderer::drawYVelocityField(const Eigen::MatrixXd& gridValues) {
-    sf::Vector2i gridSize = {static_cast<int>(gridValues.rows()), static_cast<int>(gridValues.cols() - 1)};
-    sf::Vector2f cellSize = {parameter.targetRect.size.x / float(gridSize.x), parameter.targetRect.size.y / float(gridSize.y)};
-    sf::Vector2f offset = {cellSize.x / 2.f, 0};
-
-
-    for(int x = 0; x < gridSize.x; x++) {
-        for(int y = 0; y < (gridSize.y + 1); y++) {
-            float value = gridValues(x, y);
-            auto rect = sf::RectangleShape({5, value * 40});
-            rect.setFillColor(parameter.velocityColor.eval(value));
-            rect.setPosition(parameter.targetRect.position + offset + sf::Vector2f{x*cellSize.x, y*cellSize.y});
-
-            window.draw(rect);
-        }
-    }
+        window.draw(rect);
+    });
 }
 
 /*
@@ -185,7 +178,7 @@ void Renderer::drawPressureFieldHR(const Grid& grid, sf::Vector2i res) {
 
     for(int i = 0; i < res.x; i++) {
         for(int j = 0; j < res.y; j++) {
-            double p = grid.getPressure({stride.x * i, stride.y * j});
+            double p = 1; //grid.getPressure({stride.x * i, stride.y * j});
             auto position = parameter.targetRect.position + sf::Vector2f(stride.x * i * cellSize.x, stride.y * j * cellSize.y);
             sf::RectangleShape rect({stride.x * cellSize.x, stride.y * cellSize.y});
             rect.setPosition(position);

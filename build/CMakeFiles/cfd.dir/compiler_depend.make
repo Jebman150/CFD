@@ -1717,6 +1717,9 @@ CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.o: /home/matthias/Projects/cpp/
   /usr/include/c++/16.1.1/bits/binders.h \
   /usr/include/c++/16.1.1/bits/char_traits.h \
   /usr/include/c++/16.1.1/bits/charconv.h \
+  /usr/include/c++/16.1.1/bits/chrono.h \
+  /usr/include/c++/16.1.1/bits/chrono_io.h \
+  /usr/include/c++/16.1.1/bits/codecvt.h \
   /usr/include/c++/16.1.1/bits/concept_check.h \
   /usr/include/c++/16.1.1/bits/cpp_type_traits.h \
   /usr/include/c++/16.1.1/bits/cxxabi_forced.h \
@@ -1726,6 +1729,7 @@ CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.o: /home/matthias/Projects/cpp/
   /usr/include/c++/16.1.1/bits/exception.h \
   /usr/include/c++/16.1.1/bits/exception_defines.h \
   /usr/include/c++/16.1.1/bits/exception_ptr.h \
+  /usr/include/c++/16.1.1/bits/formatfwd.h \
   /usr/include/c++/16.1.1/bits/functexcept.h \
   /usr/include/c++/16.1.1/bits/functional_hash.h \
   /usr/include/c++/16.1.1/bits/hash_bytes.h \
@@ -1739,12 +1743,16 @@ CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.o: /home/matthias/Projects/cpp/
   /usr/include/c++/16.1.1/bits/list.tcc \
   /usr/include/c++/16.1.1/bits/locale_classes.h \
   /usr/include/c++/16.1.1/bits/locale_classes.tcc \
+  /usr/include/c++/16.1.1/bits/locale_conv.h \
   /usr/include/c++/16.1.1/bits/locale_facets.h \
   /usr/include/c++/16.1.1/bits/locale_facets.tcc \
+  /usr/include/c++/16.1.1/bits/locale_facets_nonio.h \
+  /usr/include/c++/16.1.1/bits/locale_facets_nonio.tcc \
   /usr/include/c++/16.1.1/bits/localefwd.h \
   /usr/include/c++/16.1.1/bits/max_size_type.h \
   /usr/include/c++/16.1.1/bits/memory_resource.h \
   /usr/include/c++/16.1.1/bits/memoryfwd.h \
+  /usr/include/c++/16.1.1/bits/monostate.h \
   /usr/include/c++/16.1.1/bits/move.h \
   /usr/include/c++/16.1.1/bits/nested_exception.h \
   /usr/include/c++/16.1.1/bits/new_allocator.h \
@@ -1755,6 +1763,7 @@ CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.o: /home/matthias/Projects/cpp/
   /usr/include/c++/16.1.1/bits/ostream.tcc \
   /usr/include/c++/16.1.1/bits/ostream_insert.h \
   /usr/include/c++/16.1.1/bits/ostream_print.h \
+  /usr/include/c++/16.1.1/bits/parse_numbers.h \
   /usr/include/c++/16.1.1/bits/postypes.h \
   /usr/include/c++/16.1.1/bits/predefined_ops.h \
   /usr/include/c++/16.1.1/bits/ptr_traits.h \
@@ -1803,6 +1812,8 @@ CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.o: /home/matthias/Projects/cpp/
   /usr/include/c++/16.1.1/bits/streambuf_iterator.h \
   /usr/include/c++/16.1.1/bits/string_view.tcc \
   /usr/include/c++/16.1.1/bits/stringfwd.h \
+  /usr/include/c++/16.1.1/bits/unicode-data.h \
+  /usr/include/c++/16.1.1/bits/unicode.h \
   /usr/include/c++/16.1.1/bits/uniform_int_dist.h \
   /usr/include/c++/16.1.1/bits/unique_ptr.h \
   /usr/include/c++/16.1.1/bits/unordered_map.h \
@@ -1814,6 +1825,8 @@ CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.o: /home/matthias/Projects/cpp/
   /usr/include/c++/16.1.1/cassert \
   /usr/include/c++/16.1.1/cctype \
   /usr/include/c++/16.1.1/cerrno \
+  /usr/include/c++/16.1.1/charconv \
+  /usr/include/c++/16.1.1/chrono \
   /usr/include/c++/16.1.1/climits \
   /usr/include/c++/16.1.1/clocale \
   /usr/include/c++/16.1.1/cmath \
@@ -1825,6 +1838,7 @@ CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.o: /home/matthias/Projects/cpp/
   /usr/include/c++/16.1.1/cstdio \
   /usr/include/c++/16.1.1/cstdlib \
   /usr/include/c++/16.1.1/cstring \
+  /usr/include/c++/16.1.1/ctime \
   /usr/include/c++/16.1.1/cwchar \
   /usr/include/c++/16.1.1/cwctype \
   /usr/include/c++/16.1.1/debug/assertions.h \
@@ -1837,6 +1851,7 @@ CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.o: /home/matthias/Projects/cpp/
   /usr/include/c++/16.1.1/ext/numeric_traits.h \
   /usr/include/c++/16.1.1/ext/string_conversions.h \
   /usr/include/c++/16.1.1/ext/type_traits.h \
+  /usr/include/c++/16.1.1/format \
   /usr/include/c++/16.1.1/functional \
   /usr/include/c++/16.1.1/initializer_list \
   /usr/include/c++/16.1.1/ios \
@@ -1845,11 +1860,13 @@ CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.o: /home/matthias/Projects/cpp/
   /usr/include/c++/16.1.1/istream \
   /usr/include/c++/16.1.1/limits \
   /usr/include/c++/16.1.1/list \
+  /usr/include/c++/16.1.1/locale \
   /usr/include/c++/16.1.1/map \
   /usr/include/c++/16.1.1/memory \
   /usr/include/c++/16.1.1/new \
   /usr/include/c++/16.1.1/numbers \
   /usr/include/c++/16.1.1/numeric \
+  /usr/include/c++/16.1.1/optional \
   /usr/include/c++/16.1.1/ostream \
   /usr/include/c++/16.1.1/pstl/execution_defs.h \
   /usr/include/c++/16.1.1/pstl/glue_algorithm_defs.h \
@@ -1857,6 +1874,8 @@ CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.o: /home/matthias/Projects/cpp/
   /usr/include/c++/16.1.1/pstl/glue_numeric_defs.h \
   /usr/include/c++/16.1.1/pstl/pstl_config.h \
   /usr/include/c++/16.1.1/random \
+  /usr/include/c++/16.1.1/ratio \
+  /usr/include/c++/16.1.1/span \
   /usr/include/c++/16.1.1/sstream \
   /usr/include/c++/16.1.1/stdexcept \
   /usr/include/c++/16.1.1/stdlib.h \
@@ -1893,8 +1912,10 @@ CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.o: /home/matthias/Projects/cpp/
   /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/error_constants.h \
   /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/gthr-default.h \
   /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/gthr.h \
+  /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/messages_members.h \
   /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/opt_random.h \
   /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/os_defines.h \
+  /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/time_members.h \
   /usr/include/ctype.h \
   /usr/include/endian.h \
   /usr/include/errno.h \
@@ -1902,6 +1923,7 @@ CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.o: /home/matthias/Projects/cpp/
   /usr/include/features.h \
   /usr/include/gnu/stubs-64.h \
   /usr/include/gnu/stubs.h \
+  /usr/include/libintl.h \
   /usr/include/limits.h \
   /usr/include/linux/close_range.h \
   /usr/include/linux/errno.h \
@@ -3009,6 +3031,7 @@ CMakeFiles/cfd.dir/src/main.cpp.o: /home/matthias/Projects/cpp/CFD/src/main.cpp 
   /home/matthias/Projects/cpp/CFD/src/engine/engine.hpp \
   /home/matthias/Projects/cpp/CFD/src/engine/grid.hpp \
   /home/matthias/Projects/cpp/CFD/src/engine/pressureSolver.hpp \
+  /home/matthias/Projects/cpp/CFD/src/engine/tracer.hpp \
   /home/matthias/Projects/cpp/CFD/src/graphics/parameter.hpp \
   /home/matthias/Projects/cpp/CFD/src/graphics/renderer.hpp \
   /usr/include/SFML/Config.hpp \
@@ -3359,6 +3382,7 @@ CMakeFiles/cfd.dir/src/main.cpp.o: /home/matthias/Projects/cpp/CFD/src/main.cpp 
   /usr/include/c++/16.1.1/iomanip \
   /usr/include/c++/16.1.1/ios \
   /usr/include/c++/16.1.1/iosfwd \
+  /usr/include/c++/16.1.1/iostream \
   /usr/include/c++/16.1.1/istream \
   /usr/include/c++/16.1.1/iterator \
   /usr/include/c++/16.1.1/limits \
@@ -3608,13 +3632,11 @@ CMakeFiles/cfd.dir/src/main.cpp.o:
 
 /usr/include/c++/16.1.1/bits/atomic_timed_wait.h:
 
+/home/matthias/Projects/cpp/CFD/src/engine/tracer.hpp:
+
 /home/matthias/Projects/cpp/CFD/src/main.cpp:
 
-/usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/time_members.h:
-
 /usr/include/c++/16.1.1/variant:
-
-/usr/include/c++/16.1.1/ratio:
 
 /usr/include/c++/16.1.1/iterator:
 
@@ -3622,11 +3644,7 @@ CMakeFiles/cfd.dir/src/main.cpp.o:
 
 /usr/include/c++/16.1.1/filesystem:
 
-/usr/include/c++/16.1.1/ctime:
-
 /usr/include/c++/16.1.1/bits/quoted_string.h:
-
-/usr/include/c++/16.1.1/bits/monostate.h:
 
 /usr/include/c++/16.1.1/bits/fs_path.h:
 
@@ -3676,10 +3694,6 @@ CMakeFiles/cfd.dir/src/main.cpp.o:
 
 /usr/include/SFML/System/Time.hpp:
 
-/usr/include/c++/16.1.1/locale:
-
-/usr/include/SFML/System/String.inl:
-
 /usr/include/SFML/System/MemoryInputStream.hpp:
 
 /usr/include/SFML/System/FileInputStream.hpp:
@@ -3712,17 +3726,9 @@ CMakeFiles/cfd.dir/src/main.cpp.o:
 
 /usr/include/SFML/Graphics/RectangleShape.hpp:
 
-/usr/include/c++/16.1.1/format:
-
-/usr/include/SFML/Graphics/Image.hpp:
-
 /usr/include/SFML/Graphics/Glsl.inl:
 
 /usr/include/SFML/Graphics/Glsl.hpp:
-
-/usr/include/c++/16.1.1/charconv:
-
-/usr/include/SFML/Graphics/Export.hpp:
 
 /usr/include/SFML/Graphics/Drawable.hpp:
 
@@ -3741,6 +3747,26 @@ CMakeFiles/cfd.dir/src/main.cpp.o:
 /usr/include/SFML/System/Version.hpp:
 
 /home/matthias/Projects/cpp/CFD/src/graphics/renderer.cpp:
+
+/usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/time_members.h:
+
+/usr/include/c++/16.1.1/ratio:
+
+/usr/include/SFML/System/String.inl:
+
+/usr/include/c++/16.1.1/locale:
+
+/usr/include/SFML/Graphics/Image.hpp:
+
+/usr/include/c++/16.1.1/format:
+
+/usr/include/c++/16.1.1/ctime:
+
+/usr/include/SFML/Graphics/Export.hpp:
+
+/usr/include/c++/16.1.1/charconv:
+
+/usr/include/c++/16.1.1/bits/monostate.h:
 
 /home/matthias/Projects/cpp/CFD/src/engine/pressureSolver.cpp:
 
@@ -4388,9 +4414,9 @@ CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.o:
 
 /home/matthias/Projects/cpp/CFD/eigen/Eigen/src/Core/GlobalFunctions.h:
 
-/usr/include/c++/16.1.1/bits/locale_facets_nonio.tcc:
-
 /usr/include/c++/16.1.1/bits/fs_fwd.h:
+
+/usr/include/c++/16.1.1/bits/locale_facets_nonio.tcc:
 
 /home/matthias/Projects/cpp/CFD/eigen/Eigen/src/Core/Select.h:
 

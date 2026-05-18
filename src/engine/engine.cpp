@@ -7,35 +7,56 @@
     Initializes the grid
 */
 void Engine::initSim() {
-    deltaT = 0.001;
-    grid.initialize(Eigen::Vector2i(15, 15)); // Non-square grids currently bug
+    deltaT = 0.05;
+    Eigen::Vector3i gridSize = {20, 20, 1};
+
+    grid.initialize(
+        gridSize,
+        {Wall, partialOutflow, partialInflow, Wall, Wall, Wall}
+    );
+
+    laplacian = generateLaplacian(gridSize);
+    pressureSolver.compute(laplacian);
 }
 
 /*
     TODO: adjust time step in each simulation step
 */
 void Engine::adjustTimestep() {
-    return;
+    float maxU = std::max(grid.getMaxVelocity(), 0.1f);
+    deltaT = cTarget * grid.getDx() / maxU;
+}
+
+void Engine::checkCFDCondition() {
+    float maxU = grid.getMaxVelocity();
+    float C = maxU * deltaT / grid.getDx();
+    if(C < 0.1 || C > 1) {
+        std::cout << "WARNING: CFD Condition " << C << std::endl;
+    }
+    std::cout << "CFD: " << C << std::endl;
 }
 
 void Engine::applyBoundaryCondition() {
-    //Set boundary x velocities to partial in-/outflow
-    for(int i = 0; i < grid.getHeight(); i++) {
-        Index2D idx = {0, i};
-        if(i == 0 || i == (grid.getHeight() - 1)) grid.setVelocityU(idx, 0);
-        else grid.setVelocityU(idx, 0);
+    for(int dir = 0; dir < Direction::NUM; dir++) {
+        Direction direction = static_cast<Direction>(dir);
+        auto condition = grid.getBoundaryCondition(direction);
+        if(condition == Open) continue;
 
-        idx.i = grid.getWidth();
-        if(i == 0 || i == (grid.getHeight() - 1)) grid.setVelocityU(idx, 0);
-        else grid.setVelocityU(idx, 0);
-    }
-
-    //Set boundary y velocities to 0
-    for(int i = 0; i < grid.getWidth(); i++) {
-        Index2D idx = {i, 0};
-        grid.setVelocityV(idx, 0);
-        idx.j = grid.getHeight();
-        grid.setVelocityV(idx, 0);
+        float inflowSign = (dir%2 == 0) ? 1 : -1;
+        float vel = (condition == Wall) ? 0 : ((condition == Inflow || condition == partialInflow) ? inflowSign : -inflowSign);
+        auto plane = grid.getBoundaryPlane(direction);
+        grid.forEachVelocity(plane, [this, vel, condition](FaceView face){
+            if(condition != partialInflow && condition != partialOutflow) {
+                face.value = vel;
+            } else {
+                switch(face.axis) {
+                    case Axis::X: face.value = (face.idx.j == 0 || face.idx.j == grid.getHeight()-1) ? 0 : vel; break;
+                    case Axis::Y: face.value = (face.idx.i == 0 || face.idx.i == grid.getWidth()-1) ? 0 : vel; break;
+                    case Axis::Z: face.value = (face.idx.j == 0 || face.idx.j == grid.getHeight()-1) ? 0 : vel; break;
+                }
+                
+            }
+        });
     }
 }
 
@@ -46,31 +67,34 @@ void Engine::applyBoundaryCondition() {
     2. Update selected velocity to value at prev. pos.
 */
 void Engine::advect() {
-    grid.flushBuffer();
+    advectVelocities();
+}
 
-    //Update x velocities
-    for(int i = 1; i < grid.getWidth(); i++) {
-        for(int j = 0; j < grid.getHeight(); j++) {
-            GridCoord coord = grid.coordFromUIndex({i, j});
-            Eigen::Vector2d currentVelocity = grid.interpolateVelocity(coord);
-            auto oldPosVec = Eigen::Vector2d{coord.x, coord.y} - currentVelocity * deltaT / grid.getDx();
-            GridCoord oldCoord = {oldPosVec.x(), oldPosVec.y()};
-            grid.bufferVelocityU({i, j}, grid.interpolateVelocity(oldCoord).x());
+void Engine::advectVelocities() {
+    std::array<std::vector<float>, Axis::Dim> velocityBuffer = {
+        std::vector<float>((grid.getWidth()+1) * grid.getHeight() * grid.getDepth()),
+        std::vector<float>(grid.getWidth() * (grid.getHeight()+1) * grid.getDepth()),
+        std::vector<float>(grid.getWidth() * grid.getHeight() * (grid.getDepth()+1))
+    };
+
+    for(int ax = 0; ax < Axis::Dim; ax++) {
+        Axis axis = static_cast<Axis>(ax);
+        for(int i = 1; i < grid.getSize(axis); i++) {
+            Plane plane = {axis, i};
+            grid.forEachVelocity(plane, [this, &velocityBuffer, ax](FaceView face) {
+                Eigen::Vector3d currentVelocity = grid.interpolateVelocity(face.coord);
+                Eigen::Vector3d oldPosVec = Eigen::Vector3d{face.coord.x, face.coord.y, face.coord.z} - currentVelocity * deltaT;
+                GridCoord oldCoord = {oldPosVec.x(), oldPosVec.y(), oldPosVec.z()};
+                velocityBuffer[ax].at(grid.getVelocityIndex(face.axis, face.idx)) = grid.interpolateVelocity(oldCoord)[ax];
+            });
         }
     }
 
-    //Update y velocities
-    for(int i = 0; i < grid.getWidth(); i++) {
-        for(int j = 1; j < grid.getHeight(); j++) {
-            GridCoord coord = grid.coordFromVIndex({i, j});
-            Eigen::Vector2d currentVelocity = grid.interpolateVelocity(coord);
-            auto oldPosVec = Eigen::Vector2d{coord.x, coord.y} - currentVelocity * deltaT / grid.getDy();
-            GridCoord oldCoord = {oldPosVec.x(), oldPosVec.y()};
-            grid.bufferVelocityV({i, j}, grid.interpolateVelocity(oldCoord).y());
-        }
-    }
-    
-    grid.applyBuffer();
+    grid.overrideVelocities(velocityBuffer);
+}
+
+void Engine::advectScalarFields() {
+
 }
 
 /*
@@ -79,85 +103,111 @@ void Engine::advect() {
 */
 void Engine::project() {
     //Add artificial movement in grid
-    Index2D artificialMovCoord = {std::round(grid.getWidth() / 2.0), std::round(grid.getHeight() / 2.0)};
-    grid.setVelocityV(artificialMovCoord, 3 * sin(60.0 * currentT));
+    Index3D artificialMovCoord = {std::round(grid.getWidth() / 2.0), std::round(grid.getHeight() / 2.0), 0};
+    grid.setVelocityV(artificialMovCoord, 3 * sin(currentT));
 
     int width = grid.getWidth();
     int height = grid.getHeight();
-    int n = width * height;
+    int depth = grid.getDepth();
+    int n = width * height * depth;
 
-    double cx = 1/(grid.getDx() * grid.getDx());
-    double cy = 1/(grid.getDy() * grid.getDy());
-
-    Eigen::SparseMatrix<double> A(n, n);
-    for(int i = 0; i < n; i++) {
-        int numOfcx = 0;
-        int numOfcy = 0;
-        if((i + height) < n) {
-            A.insert(i, i + height) = -cx;
-            numOfcx++;
-        }
-        if((i - height) >= 0) {
-            A.insert(i, i - height) = -cx;
-            numOfcx++;
-        }
-        if((i + 1) % height != 0) {
-            A.insert(i, i + 1) = -cy;
-            numOfcy++;
-        }
-        if(i % height != 0 && i != 0) {
-            A.insert(i, i - 1) = -cy;
-            numOfcy++;
-        }
-        A.insert(i, i) = numOfcx * cx + numOfcy * cy;
-    }
-
-    //std::cout << Eigen::MatrixXd(A) << std::endl;
-
-    Eigen::VectorXd d(n);
+    Eigen::VectorXf d(n);
     int counter = 0;
-    for(double x = 0.5; x < width; x++) {
-        for(double y = 0.5; y < height; y++) {
-            /*std::cout << "Get divergence (" << x << ", " << y << ")" << std::endl
-                << " | (" << x+0.5 << ", " << y << "): " << grid.getVelocityU({x + 0.5, y}) << std::endl
-                << " | (" << x-0.5 << ", " << y << "): " << grid.getVelocityU({x - 0.5, y}) << std::endl
-                << " | (" << x << ", " << y + 0.5 << "): " << grid.getVelocityV({x, y + 0.5}) << std::endl
-                << " | (" << x << ", " << y - 0.5 << "): " << grid.getVelocityV({x, y - 0.5}) << std::endl
-                << std::endl;*/
-            d(counter++) = grid.getDivergence({x, y});
+    for(float z = 0.5f; z < depth; z++) {
+        for(float y = 0.5f; y < height; y++) {
+            for(float x = 0.5f; x < width; x++) {
+                /*std::cout << "Get divergence (" << x << ", " << y << ")" << std::endl
+                    << " | (" << x+0.5f << ", " << y << "): " << grid.getVelocityU({x + 0.5f, y}) << std::endl
+                    << " | (" << x-0.5f << ", " << y << "): " << grid.getVelocityU({x - 0.5f, y}) << std::endl
+                    << " | (" << x << ", " << y + 0.5f << "): " << grid.getVelocityV({x, y + 0.5f}) << std::endl
+                    << " | (" << x << ", " << y - 0.5f << "): " << grid.getVelocityV({x, y - 0.5f}) << std::endl
+                    << std::endl;*/
+                d(counter++) = grid.getDivergence({x, y, z});
+            }
         }
     }
     d = d * (density / deltaT);
     d.array() -= d.mean();
-    //std::cout << "Sum: " << d.sum() << std::endl;
-    //std::cout << d << std::endl;
 
-    auto p = pressureSolver.computePressure(d, A);
-
-    //std::cout << "Check: " << A*p << std::endl;
+    Eigen::VectorXf p = pressureSolver.solve(d);
 
     counter = 0;
-    for(int i = 0; i < width; i++) {
+    for(int k = 0; k < depth; k++) {
         for(int j = 0; j < height; j++) {
-            grid.setPressure({i, j}, p(counter++));
+            for(int i = 0; i < width; i++) {
+                grid.setScalarField(ScalarFieldID::Pressure, {i, j, k}, p(counter++));
+            }
         }
     }
 
-    //Update velocities in x direction
-    for(int i = 1; i < width; i++) {
-        for(int j = 0; j < height; j++) {
-            GridCoord coord = grid.coordFromUIndex({i, j});
-            grid.updateU({i, j}, (deltaT / density) * ((grid.getPressure({coord.x + 0.5, coord.y}) - grid.getPressure({coord.x - 0.5, coord.y})) / grid.getDx()));
-        }
-    }
-
-    //Update velocities in y direction
-    for(int i = 0; i < width; i++) {
-        for(int j = 1; j < height; j++) {
-            GridCoord coord = grid.coordFromVIndex({i, j});
-            grid.updateV({i, j}, (deltaT / density) * ((grid.getPressure({coord.x, coord.y + 0.5}) - grid.getPressure({coord.x, coord.y - 0.5})) / grid.getDy()));
+    for(int ax = 0; ax < Axis::Dim; ax++) {
+        Axis axis = static_cast<Axis>(ax);
+        for(int i = 1; i < grid.getSize(axis); i++) {
+            Plane plane = {axis, i};
+            grid.forEachVelocity(plane, [this](FaceView face) {
+                GridCoord coord = face.coord;
+                face.value += (deltaT / density) * (grid.getScalarGradient(ScalarFieldID::Pressure, coord, face.axis));
+            });
         }
     }
 
     currentT += deltaT;
+}
+
+Eigen::SparseMatrix<float> Engine::generateLaplacian(Eigen::Vector3i gridSize) {
+    int width  = gridSize.x();
+    int height = gridSize.y();
+    int depth  = gridSize.z();
+
+    int n = width * height * depth;
+
+    float cx = width * width;
+    float cy = height * height;
+    float cz = depth * depth;
+
+    std::vector<Eigen::Triplet<float>> T;
+    for (int i = 0; i < n; ++i)
+    {
+        int x = i % width;
+        int y = (i / width) % height;
+        int z = i / (width * height);
+
+        float diag = 0.0;
+
+        //X
+        if (x > 0) {
+            T.emplace_back(i, i - 1, -cx);
+            diag += cx;
+        }
+        if (x < width - 1) {
+            T.emplace_back(i, i + 1, -cx);
+            diag += cx;
+        }
+
+        // Y
+        if (y > 0) {
+            T.emplace_back(i, i - width, -cy);
+            diag += cy;
+        }
+        if (y < height - 1) {
+            T.emplace_back(i, i + width, -cy);
+            diag += cy;
+        }
+
+        // Z
+        if (z > 0) {
+            T.emplace_back(i, i - width * height, -cz);
+            diag += cz;
+        }
+        if (z < depth - 1) {
+            T.emplace_back(i, i + width * height, -cz);
+            diag += cz;
+        }
+
+        T.emplace_back(i, i, diag);
+    }
+
+    Eigen::SparseMatrix<float> A(n,n);
+    A.setFromTriplets(T.begin(), T.end());
+    return A;
 }

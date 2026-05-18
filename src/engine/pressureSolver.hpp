@@ -5,10 +5,11 @@
 
 class PressureSolver {
 
-    float tuningConstant = 0.97;
-    float tolerance = 0.0001;
+    float tolerance = 0.1;
     int maxit = 1000;
 
 public:
-    Eigen::VectorXd computePressure(const Eigen::VectorXd& divergence, const Eigen::SparseMatrix<double>& A);
+    Eigen::VectorXf computePressure(const Eigen::VectorXf& divergence, const Eigen::SparseMatrix<float>& A, const Eigen::IncompleteCholesky<float>& ichol);
+
+    float getTol() const { return tolerance; }
 };

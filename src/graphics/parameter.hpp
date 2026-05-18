@@ -20,6 +20,10 @@ struct ColorGradient {
 };
 
 struct GraphicalParameter {
+    const sf::Color xAxis = sf::Color::Red;
+    const sf::Color yAxis = sf::Color::Blue;
+    const sf::Color zAxis = sf::Color::Green;
+
     const sf::Color gridCellColor = sf::Color(90, 90, 90);
     const sf::Color backgroundColor = sf::Color(10, 10, 20);
     const ColorGradient pressureColor = {
