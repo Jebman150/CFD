@@ -311,6 +311,7 @@ CMakeFiles/cfd.dir/src/engine/engine.cpp.o: /home/matthias/Projects/cpp/CFD/src/
   /home/matthias/Projects/cpp/CFD/eigen/Eigen/src/misc/RankRevealingBase.h \
   /home/matthias/Projects/cpp/CFD/src/engine/engine.hpp \
   /home/matthias/Projects/cpp/CFD/src/engine/grid.hpp \
+  /home/matthias/Projects/cpp/CFD/src/engine/navigation.hpp \
   /home/matthias/Projects/cpp/CFD/src/engine/pressureSolver.hpp \
   /usr/include/alloca.h \
   /usr/include/asm-generic/bitsperlong.h \
@@ -957,6 +958,7 @@ CMakeFiles/cfd.dir/src/engine/grid.cpp.o: /home/matthias/Projects/cpp/CFD/src/en
   /home/matthias/Projects/cpp/CFD/eigen/Eigen/src/misc/Kernel.h \
   /home/matthias/Projects/cpp/CFD/eigen/Eigen/src/misc/RankRevealingBase.h \
   /home/matthias/Projects/cpp/CFD/src/engine/grid.hpp \
+  /home/matthias/Projects/cpp/CFD/src/engine/navigation.hpp \
   /usr/include/alloca.h \
   /usr/include/asm-generic/bitsperlong.h \
   /usr/include/asm-generic/errno-base.h \
@@ -1601,6 +1603,7 @@ CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.o: /home/matthias/Projects/cpp/
   /home/matthias/Projects/cpp/CFD/eigen/Eigen/src/misc/Image.h \
   /home/matthias/Projects/cpp/CFD/eigen/Eigen/src/misc/Kernel.h \
   /home/matthias/Projects/cpp/CFD/eigen/Eigen/src/misc/RankRevealingBase.h \
+  /home/matthias/Projects/cpp/CFD/src/engine/navigation.hpp \
   /home/matthias/Projects/cpp/CFD/src/engine/pressureSolver.hpp \
   /usr/include/alloca.h \
   /usr/include/asm-generic/bitsperlong.h \
@@ -2269,6 +2272,7 @@ CMakeFiles/cfd.dir/src/graphics/renderer.cpp.o: /home/matthias/Projects/cpp/CFD/
   /home/matthias/Projects/cpp/CFD/eigen/Eigen/src/misc/Kernel.h \
   /home/matthias/Projects/cpp/CFD/eigen/Eigen/src/misc/RankRevealingBase.h \
   /home/matthias/Projects/cpp/CFD/src/engine/grid.hpp \
+  /home/matthias/Projects/cpp/CFD/src/engine/navigation.hpp \
   /home/matthias/Projects/cpp/CFD/src/graphics/parameter.hpp \
   /home/matthias/Projects/cpp/CFD/src/graphics/renderer.hpp \
   /usr/include/SFML/Config.hpp \
@@ -3030,6 +3034,7 @@ CMakeFiles/cfd.dir/src/main.cpp.o: /home/matthias/Projects/cpp/CFD/src/main.cpp 
   /home/matthias/Projects/cpp/CFD/eigen/Eigen/src/misc/RankRevealingBase.h \
   /home/matthias/Projects/cpp/CFD/src/engine/engine.hpp \
   /home/matthias/Projects/cpp/CFD/src/engine/grid.hpp \
+  /home/matthias/Projects/cpp/CFD/src/engine/navigation.hpp \
   /home/matthias/Projects/cpp/CFD/src/engine/pressureSolver.hpp \
   /home/matthias/Projects/cpp/CFD/src/engine/tracer.hpp \
   /home/matthias/Projects/cpp/CFD/src/graphics/parameter.hpp \
@@ -3884,6 +3889,8 @@ CMakeFiles/cfd.dir/src/main.cpp.o:
 
 /usr/include/c++/16.1.1/pstl/pstl_config.h:
 
+/usr/include/c++/16.1.1/numeric:
+
 /home/matthias/Projects/cpp/CFD/eigen/Eigen/src/SparseCore/SparseProduct.h:
 
 /home/matthias/Projects/cpp/CFD/eigen/Eigen/src/Core/util/Meta.h:
@@ -4730,6 +4737,8 @@ CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.o:
 
 /home/matthias/Projects/cpp/CFD/src/engine/engine.hpp:
 
+/home/matthias/Projects/cpp/CFD/src/engine/navigation.hpp:
+
 /usr/include/c++/16.1.1/ostream:
 
 /home/matthias/Projects/cpp/CFD/src/engine/pressureSolver.hpp:
@@ -5191,5 +5200,3 @@ CMakeFiles/cfd.dir/src/graphics/renderer.cpp.o:
 /usr/include/c++/16.1.1/functional:
 
 /usr/include/c++/16.1.1/initializer_list:
-
-/usr/include/c++/16.1.1/numeric:

@@ -5,19 +5,14 @@
 
 class Engine {
     Grid grid;
-    Eigen::ConjugateGradient<
-        Eigen::SparseMatrix<float>,
-        Eigen::Lower|Eigen::Upper,
-        Eigen::IncompleteCholesky<float>
-    > pressureSolver;
+    PressureSolver pressureSolver;
 
     float deltaT;
 
-    float cTarget = 0.8;
+    float cTarget = 2;
     float density = 1000.f;
     float currentT = 0;
-    Eigen::SparseMatrix<float> laplacian;
-
+    float boundaryVelocity = 5.f;
 public:
     void initSim();
     void adjustTimestep();
@@ -29,8 +24,6 @@ public:
     void project();
 
     float getDeltatime() const { return deltaT; }
-
-    Eigen::SparseMatrix<float> generateLaplacian(Eigen::Vector3i gridSize);
 
     const Grid& getGrid() const { return grid; }
 };

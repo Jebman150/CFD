@@ -561,6 +561,7 @@ CMakeFiles/cfd.dir/src/main.cpp.o: \
  /home/matthias/Projects/cpp/CFD/eigen/Eigen/src/Eigenvalues/GeneralizedEigenSolver.h \
  /home/matthias/Projects/cpp/CFD/eigen/Eigen/src/Eigenvalues/./RealQZ.h \
  /home/matthias/Projects/cpp/CFD/eigen/Eigen/src/Eigenvalues/MatrixBaseEigenvalues.h \
+ /home/matthias/Projects/cpp/CFD/src/engine/navigation.hpp \
  /home/matthias/Projects/cpp/CFD/src/engine/pressureSolver.hpp \
  /home/matthias/Projects/cpp/CFD/eigen/Eigen/Sparse \
  /home/matthias/Projects/cpp/CFD/src/graphics/renderer.hpp \

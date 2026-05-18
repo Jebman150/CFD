@@ -8,15 +8,14 @@
 */
 void Engine::initSim() {
     deltaT = 0.05;
-    Eigen::Vector3i gridSize = {20, 20, 1};
+    Eigen::Vector3i gridSize = {30, 30, 1};
 
     grid.initialize(
         gridSize,
-        {Wall, partialOutflow, partialInflow, Wall, Wall, Wall}
+        {Wall, Wall, Wall, Wall, Wall, Wall}
     );
 
-    laplacian = generateLaplacian(gridSize);
-    pressureSolver.compute(laplacian);
+    pressureSolver.initialize(gridSize);
 }
 
 /*
@@ -44,6 +43,7 @@ void Engine::applyBoundaryCondition() {
 
         float inflowSign = (dir%2 == 0) ? 1 : -1;
         float vel = (condition == Wall) ? 0 : ((condition == Inflow || condition == partialInflow) ? inflowSign : -inflowSign);
+        vel *= boundaryVelocity;
         auto plane = grid.getBoundaryPlane(direction);
         grid.forEachVelocity(plane, [this, vel, condition](FaceView face){
             if(condition != partialInflow && condition != partialOutflow) {
@@ -104,7 +104,8 @@ void Engine::advectScalarFields() {
 void Engine::project() {
     //Add artificial movement in grid
     Index3D artificialMovCoord = {std::round(grid.getWidth() / 2.0), std::round(grid.getHeight() / 2.0), 0};
-    grid.setVelocityV(artificialMovCoord, 3 * sin(currentT));
+    grid.setVelocityV(artificialMovCoord, 30 * sin(3 * currentT));
+    grid.setVelocityU(artificialMovCoord, 30 * cos(3 * currentT));
 
     int width = grid.getWidth();
     int height = grid.getHeight();
@@ -116,20 +117,18 @@ void Engine::project() {
     for(float z = 0.5f; z < depth; z++) {
         for(float y = 0.5f; y < height; y++) {
             for(float x = 0.5f; x < width; x++) {
-                /*std::cout << "Get divergence (" << x << ", " << y << ")" << std::endl
-                    << " | (" << x+0.5f << ", " << y << "): " << grid.getVelocityU({x + 0.5f, y}) << std::endl
-                    << " | (" << x-0.5f << ", " << y << "): " << grid.getVelocityU({x - 0.5f, y}) << std::endl
-                    << " | (" << x << ", " << y + 0.5f << "): " << grid.getVelocityV({x, y + 0.5f}) << std::endl
-                    << " | (" << x << ", " << y - 0.5f << "): " << grid.getVelocityV({x, y - 0.5f}) << std::endl
-                    << std::endl;*/
                 d(counter++) = grid.getDivergence({x, y, z});
             }
         }
     }
     d = d * (density / deltaT);
     d.array() -= d.mean();
+    //if(std::abs(d.sum()) > 0.1) {
+    //    std::cout << "WARNING: Problem singular!" << std::endl;
+    //    std::cout << "Sum of divergence: " << std::abs(d.sum()) << std::endl;
+    //}
 
-    Eigen::VectorXf p = pressureSolver.solve(d);
+    Eigen::VectorXf p = pressureSolver.computePressure(d);
 
     counter = 0;
     for(int k = 0; k < depth; k++) {
@@ -146,68 +145,10 @@ void Engine::project() {
             Plane plane = {axis, i};
             grid.forEachVelocity(plane, [this](FaceView face) {
                 GridCoord coord = face.coord;
-                face.value += (deltaT / density) * (grid.getScalarGradient(ScalarFieldID::Pressure, coord, face.axis));
+                face.value -= (deltaT / density) * (grid.getScalarGradient(ScalarFieldID::Pressure, coord, face.axis));
             });
         }
     }
 
     currentT += deltaT;
-}
-
-Eigen::SparseMatrix<float> Engine::generateLaplacian(Eigen::Vector3i gridSize) {
-    int width  = gridSize.x();
-    int height = gridSize.y();
-    int depth  = gridSize.z();
-
-    int n = width * height * depth;
-
-    float cx = width * width;
-    float cy = height * height;
-    float cz = depth * depth;
-
-    std::vector<Eigen::Triplet<float>> T;
-    for (int i = 0; i < n; ++i)
-    {
-        int x = i % width;
-        int y = (i / width) % height;
-        int z = i / (width * height);
-
-        float diag = 0.0;
-
-        //X
-        if (x > 0) {
-            T.emplace_back(i, i - 1, -cx);
-            diag += cx;
-        }
-        if (x < width - 1) {
-            T.emplace_back(i, i + 1, -cx);
-            diag += cx;
-        }
-
-        // Y
-        if (y > 0) {
-            T.emplace_back(i, i - width, -cy);
-            diag += cy;
-        }
-        if (y < height - 1) {
-            T.emplace_back(i, i + width, -cy);
-            diag += cy;
-        }
-
-        // Z
-        if (z > 0) {
-            T.emplace_back(i, i - width * height, -cz);
-            diag += cz;
-        }
-        if (z < depth - 1) {
-            T.emplace_back(i, i + width * height, -cz);
-            diag += cz;
-        }
-
-        T.emplace_back(i, i, diag);
-    }
-
-    Eigen::SparseMatrix<float> A(n,n);
-    A.setFromTriplets(T.begin(), T.end());
-    return A;
 }

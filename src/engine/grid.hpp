@@ -4,21 +4,15 @@
 #include <vector>
 #include <array>
 
+#include "navigation.hpp"
+
 struct GridCoord {
     float x, y, z;
-};
-
-struct Index3D {
-    int i, j, k;
 };
 
 struct ScalarField {
     std::vector<float> data;
     bool advect;
-};
-
-enum Axis {
-    X, Y, Z, Dim
 };
 
 struct FaceView {
@@ -60,16 +54,6 @@ enum BoundaryCondition {
     partialOutflow
 };
 
-enum Direction {
-    Left,
-    Right,
-    Top,
-    Bottom,
-    Front,
-    Back,
-    NUM
-};
-
 class Grid {
     // Grid topology
     int nx, ny, nz;
@@ -95,10 +79,6 @@ class Grid {
     float getScalarGradX(ScalarFieldID type, GridCoord coord) const;
     float getScalarGradY(ScalarFieldID type, GridCoord coord) const;
     float getScalarGradZ(ScalarFieldID type, GridCoord coord) const;
-
-    inline int cellIndex(Index3D idx) const {
-        return idx.i + nx * (idx.j + ny * idx.k);
-    }
 
     inline int uIndex(Index3D idx) const {
         return idx.i + (nx+1) * (idx.j + ny * idx.k);
@@ -140,6 +120,10 @@ public:
     float getScalarField(ScalarFieldID type, GridCoord coord) const;
 
     float getMaxVelocity() const;
+
+    inline int cellIndex(Index3D idx) const {
+        return idx.i + nx * (idx.j + ny * idx.k);
+    }
 
     int getVelocityIndex(Axis axis, Index3D idx) {
         switch(axis) {

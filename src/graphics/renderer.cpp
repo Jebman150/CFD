@@ -99,8 +99,8 @@ void Renderer::drawDivergenceField(const Grid& grid) {
     sf::Vector2i gridSize = {grid.getWidth(), grid.getHeight()};
     sf::Vector2f cellSize = {parameter.targetRect.size.x / float(gridSize.x), parameter.targetRect.size.y / float(gridSize.y)};
 
-    for(double x = 0.5; x < gridSize.x; x++) {
-        for(double y = 0.5; y < gridSize.y; y++) {
+    for(float x = 0.5; x < gridSize.x; x++) {
+        for(float y = 0.5; y < gridSize.y; y++) {
             auto rect = sf::RectangleShape(cellSize);
             float value = grid.getDivergence({x, y});
             rect.setFillColor(parameter.pressureColor.eval(value));
@@ -124,11 +124,11 @@ void Renderer::drawVelocityPlane(const Grid& grid) {
         sf::Vector2f offset(-5, -5);
         switch(face.axis) {
             case Axis::X: 
-                size = {face.value * 40, 5.f};
+                size = {face.value * 4, 5.f};
                 offset = {0, cellSize.y * 0.5f};
                 break;
             case Axis::Y: 
-                size = {5.f, face.value * 40}; 
+                size = {5.f, face.value * 4}; 
                 offset = {cellSize.x * 0.5f, 0};
                 break;
         }
@@ -157,7 +157,7 @@ void Renderer::drawVelocityFieldHR(const Grid& grid, sf::Vector2i res) {
             auto position = parameter.targetRect.position + sf::Vector2f(stride.x * i * cellSize.x, stride.y * j * cellSize.y);
             sf::Vertex line[] = {
                 {position, sf::Color::Cyan},
-                {position + sf::Vector2f(vel.x(), vel.y()) * 20.f, sf::Color::Cyan}
+                {position + sf::Vector2f(vel.x(), vel.y()) * 2.f, sf::Color::Cyan}
             };
 
             window.draw(line, 2, sf::PrimitiveType::Lines);
