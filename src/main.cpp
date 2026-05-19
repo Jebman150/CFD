@@ -10,17 +10,20 @@ using namespace std::chrono_literals;
 
 int main() {
     Tracer tracer;
-    Engine engine;
-    Renderer renderer;
+    engine::Engine engine;
+    renderer::Renderer renderer;
 
     engine.initSim();
     renderer.initialize();
+    renderer.setVisMode(renderer::VisMode::Smoke);
+    engine.spawnSmoke();
 
     while(renderer.active()) {
         tracer.startJob("Frame");
         auto frameStart = std::chrono::high_resolution_clock::now();
         engine.adjustTimestep();
         //std::this_thread::sleep_for(1000ms / 30 * engine.getDeltatime());
+
 
         tracer.startJob("Advect");
         engine.applyBoundaryCondition();

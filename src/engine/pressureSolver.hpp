@@ -4,11 +4,15 @@
 #include <Eigen/Sparse>
 #include "navigation.hpp"
 
+namespace engine {
+
+using namespace navigation;
+
 class PressureSolver {
 
     float tuningConstant = 0.97;
-    float tolerance = 0.001;
-    int maxit = 1000;
+    float tolerance = 0.0001;
+    int maxit = 100;
     Eigen::Vector3i gridSize;
     Eigen::Vector3f c;
 
@@ -26,11 +30,11 @@ class PressureSolver {
     float getA(Index3D idx, Axis axis);
     float getDiagA(Index3D idx);
 public:
-    void initialize(Eigen::Vector3i _gridSize) {
+    void initialize(Eigen::Vector3i _gridSize, Eigen::Vector3f _d) {
         gridSize = _gridSize;
-        c.x() = float(gridSize.x() * gridSize.x());
-        c.z() = float(gridSize.z() * gridSize.z());
-        c.y() = float(gridSize.y() * gridSize.y());
+        c.x() = 1.f/(_d.x() * _d.x());
+        c.y() = 1.f/(_d.y() * _d.y());
+        c.z() = 1.f/(_d.z() * _d.z());
         auxiliaryVec = Eigen::VectorXf::Zero(gridSize.x() * gridSize.y() * gridSize.z());
         buildPreconditioner();
     }
@@ -39,3 +43,5 @@ public:
 
     float getTol() const { return tolerance; }
 };
+
+}

@@ -3,19 +3,21 @@
 #include <Eigen/Sparse>
 #include <iostream>
 
+namespace engine {
+
 /*
     Initializes the grid
 */
 void Engine::initSim() {
     deltaT = 0.05;
-    Eigen::Vector3i gridSize = {30, 30, 1};
+    Eigen::Vector3i gridSize = {50, 50, 1};
 
     grid.initialize(
         gridSize,
         {Wall, Wall, Wall, Wall, Wall, Wall}
     );
 
-    pressureSolver.initialize(gridSize);
+    pressureSolver.initialize(gridSize, {grid.getDx(), grid.getDy(), grid.getDz()});
 }
 
 /*
@@ -60,6 +62,20 @@ void Engine::applyBoundaryCondition() {
     }
 }
 
+void Engine::spawnSmoke() {
+    Eigen::Vector3f center = {grid.getWidth()/2.f, grid.getHeight()/2.f, grid.getDepth()/2.f};
+    float radius = 2;
+    for(int k = 0; k < grid.getDepth(); k++) {
+        for(int j = 0; j < grid.getHeight(); j++) {
+            for(int i = 0; i < grid.getWidth(); i++) {
+                if(std::abs(i - center.x()) < 4 && std::abs(j - center.y()) < 4 && std::abs(k - center.z()) < 4) {
+                    grid.setScalarField(ScalarFieldID::Smoke, {i, j, k}, 1.f);
+                }
+            }
+        }
+    }
+}
+
 /*
     Moves velocities over the grid.
 
@@ -68,6 +84,7 @@ void Engine::applyBoundaryCondition() {
 */
 void Engine::advect() {
     advectVelocities();
+    advectScalarFields();
 }
 
 void Engine::advectVelocities() {
@@ -94,7 +111,26 @@ void Engine::advectVelocities() {
 }
 
 void Engine::advectScalarFields() {
+    for(int id = 0; id < static_cast<int>(ScalarFieldID::NumFields); id++) {
+        auto& field = grid.getScalarField(static_cast<ScalarFieldID>(id));
+        if(!field.advect) continue;
 
+        std::vector<float> buffer(grid.getWidth() * grid.getHeight() * grid.getDepth());
+
+        for(int k = 0; k < grid.getDepth(); k++) {
+            for(int j = 0; j < grid.getHeight(); j++) {
+                for(int i = 0; i < grid.getWidth(); i++) {
+                    GridCoord coord = grid.coordFromCellIndex({i, j, k});
+                    Eigen::Vector3d currentVelocity = grid.interpolateVelocity(coord);
+                    Eigen::Vector3d oldPosVec = Eigen::Vector3d{coord.x, coord.y, coord.z} - currentVelocity * deltaT;
+                    GridCoord oldCoord = {oldPosVec.x(), oldPosVec.y(), oldPosVec.z()};
+                    buffer.at(grid.cellIndex({i, j, k})) = grid.getScalarField(static_cast<ScalarFieldID>(id), oldCoord);
+                }
+            }
+        }
+
+        grid.overrideScalarField(static_cast<ScalarFieldID>(id), buffer);
+    }
 }
 
 /*
@@ -104,8 +140,8 @@ void Engine::advectScalarFields() {
 void Engine::project() {
     //Add artificial movement in grid
     Index3D artificialMovCoord = {std::round(grid.getWidth() / 2.0), std::round(grid.getHeight() / 2.0), 0};
-    grid.setVelocityV(artificialMovCoord, 30 * sin(3 * currentT));
-    grid.setVelocityU(artificialMovCoord, 30 * cos(3 * currentT));
+    grid.setVelocityV(artificialMovCoord, 300 * sin(3 * currentT));
+    grid.setVelocityU(artificialMovCoord, 300 * cos(3 * currentT));
 
     int width = grid.getWidth();
     int height = grid.getHeight();
@@ -151,4 +187,6 @@ void Engine::project() {
     }
 
     currentT += deltaT;
+}
+
 }

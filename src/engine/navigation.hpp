@@ -1,19 +1,27 @@
 #pragma once
 
-struct Index3D {
-    int i, j, k;
-};
+namespace engine {
 
-enum Axis {
-    X, Y, Z, Dim
-};
+namespace navigation {
 
-enum Direction {
-    Left,
-    Right,
-    Top,
-    Bottom,
-    Front,
-    Back,
-    NUM
-};
+    struct Index3D {
+        int i, j, k;
+    };
+
+    enum Axis {
+        X, Y, Z, Dim
+    };
+
+    enum Direction {
+        Left,
+        Right,
+        Top,
+        Bottom,
+        Front,
+        Back,
+        NUM
+    };
+
+}
+
+}

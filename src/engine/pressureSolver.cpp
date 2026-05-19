@@ -4,6 +4,8 @@
 #include <chrono>
 #include <iostream>
 
+namespace engine {
+
 Eigen::VectorXf PressureSolver::computePressure(const Eigen::VectorXf& divergence) {
     Eigen::VectorXf p = Eigen::VectorXf::Zero(divergence.size());
     Eigen::VectorXf r = -divergence;
@@ -161,4 +163,6 @@ float PressureSolver::getDiagA(Index3D idx) {
     sum += static_cast<int>(idx.k < gridSize.z()-1) * c.z();
 
     return sum;
+}
+
 }

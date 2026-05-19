@@ -1,6 +1,14 @@
 #include "renderer.hpp"
 #include<iostream>
 
+namespace renderer {
+
+using engine::Grid;
+using engine::ConstFaceView;
+using engine::Plane;
+using engine::ScalarFieldID;
+using namespace engine::navigation;
+
 /*
     Creates a window and prepares the renderer for drawing.
 */
@@ -24,12 +32,32 @@ void Renderer::updateFrame(const Grid& grid) {
     }
 
     drawCoordinateSystem();
-    //drawPressureField(grid.getPressureValues());
-    //drawDivergenceField(grid);
-    drawCellOutline(grid.getDimensions(Axis::Z));
-    //drawVelocityPlane(grid);
-    //drawPressureFieldHR(grid, {100, 100});
-    drawVelocityFieldHR(grid, {50, 50});
+
+    switch(visMode) {
+        case VisMode::Pressure:
+            drawPressureFieldHR(grid, resolution);
+            break;
+        case VisMode::Speed:
+            drawSpeedFieldHR(grid, resolution);
+            break;
+        case VisMode::Divergence:
+            drawDivergenceField(grid);
+            break;
+        case VisMode::Smoke:
+            drawSmokeFieldHR(grid, resolution);
+            break;
+    }
+
+    switch(vecMode) {
+        case VectorFieldMode::VelocityHR:
+            drawVelocityFieldHR(grid, resolution);
+            break;
+        case VectorFieldMode::VelocityDebug:
+            drawVelocityPlaneDebug(grid);
+    }
+
+
+    //drawCellOutline(grid.getDimensions(Axis::Z));
 
     window.display();
 }
@@ -114,7 +142,7 @@ void Renderer::drawDivergenceField(const Grid& grid) {
 /*
     Draws the velocities of the z plane in the grid
 */
-void Renderer::drawVelocityPlane(const Grid& grid) {
+void Renderer::drawVelocityPlaneDebug(const Grid& grid) {
     sf::Vector2i gridSize = {grid.getDimensions(Axis::Z).x(), grid.getDimensions(Axis::Z).y()};
     sf::Vector2f cellSize = {parameter.targetRect.size.x / float(gridSize.x), parameter.targetRect.size.y / float(gridSize.y)};
 
@@ -178,7 +206,7 @@ void Renderer::drawPressureFieldHR(const Grid& grid, sf::Vector2i res) {
 
     for(int i = 0; i < res.x; i++) {
         for(int j = 0; j < res.y; j++) {
-            double p = 1; //grid.getPressure({stride.x * i, stride.y * j});
+            double p = grid.getScalarField(ScalarFieldID::Pressure, {stride.x * i, stride.y * j});
             auto position = parameter.targetRect.position + sf::Vector2f(stride.x * i * cellSize.x, stride.y * j * cellSize.y);
             sf::RectangleShape rect({stride.x * cellSize.x, stride.y * cellSize.y});
             rect.setPosition(position);
@@ -187,4 +215,54 @@ void Renderer::drawPressureFieldHR(const Grid& grid, sf::Vector2i res) {
             window.draw(rect);
         }
     }
+}
+
+/*
+    Draws a high resolution speed field by bilinear interpolation of the off-grid speeds.
+
+    @param grid
+    @param res Target resolution of the field
+*/
+void Renderer::drawSpeedFieldHR(const Grid& grid, sf::Vector2i res) {
+    sf::Vector2i gridSize = {grid.getWidth(), grid.getHeight()};
+    sf::Vector2f cellSize = {parameter.targetRect.size.x / float(gridSize.x), parameter.targetRect.size.y / float(gridSize.y)};
+    sf::Vector2f stride = {gridSize.x / float(res.x), gridSize.y / float(res.y)};
+
+    for(int i = 0; i < res.x; i++) {
+        for(int j = 0; j < res.y; j++) {
+            double vel = grid.interpolateVelocity({stride.x * i, stride.y * j}).norm();
+            auto position = parameter.targetRect.position + sf::Vector2f(stride.x * i * cellSize.x, stride.y * j * cellSize.y);
+            sf::RectangleShape rect({stride.x * cellSize.x, stride.y * cellSize.y});
+            rect.setPosition(position);
+            rect.setFillColor(parameter.velocityColor.eval(vel * 0.1));
+
+            window.draw(rect);
+        }
+    }
+}
+
+/*
+    Draws a high resolution speed field by bilinear interpolation of the off-grid speeds.
+
+    @param grid
+    @param res Target resolution of the field
+*/
+void Renderer::drawSmokeFieldHR(const Grid& grid, sf::Vector2i res) {
+    sf::Vector2i gridSize = {grid.getWidth(), grid.getHeight()};
+    sf::Vector2f cellSize = {parameter.targetRect.size.x / float(gridSize.x), parameter.targetRect.size.y / float(gridSize.y)};
+    sf::Vector2f stride = {gridSize.x / float(res.x), gridSize.y / float(res.y)};
+
+    for(int i = 0; i < res.x; i++) {
+        for(int j = 0; j < res.y; j++) {
+            float val = grid.getScalarField(ScalarFieldID::Smoke, {stride.x * i, stride.y * j});
+            auto position = parameter.targetRect.position + sf::Vector2f(stride.x * i * cellSize.x, stride.y * j * cellSize.y);
+            sf::RectangleShape rect({stride.x * cellSize.x, stride.y * cellSize.y});
+            rect.setPosition(position);
+            rect.setFillColor(parameter.smokeColor.eval(val));
+
+            window.draw(rect);
+        }
+    }
+}
+
 }

@@ -6,6 +6,10 @@
 
 #include "navigation.hpp"
 
+namespace engine {
+
+using namespace navigation;
+
 struct GridCoord {
     float x, y, z;
 };
@@ -42,6 +46,7 @@ enum CellType {
 
 enum ScalarFieldID {
     Pressure,
+    Smoke,
     NumFields
 };
 
@@ -64,7 +69,7 @@ class Grid {
     // Grid data
     std::vector<CellType> cellType;
 
-    std::array<std::vector<float>, ScalarFieldID::NumFields> scalarFields;
+    std::array<ScalarField, ScalarFieldID::NumFields> scalarFields;
 
     // Edge data
     std::vector<float> u;
@@ -99,7 +104,8 @@ public:
     void setVelocityV(Index3D idx, float val) { v.at(vIndex(idx)) = val; }
     void setVelocityW(Index3D idx, float val) { w.at(wIndex(idx)) = val; }
 
-    void setScalarField(ScalarFieldID type, Index3D idx, float val) { scalarFields[static_cast<int>(type)].at(cellIndex(idx)) = val; }
+    void setScalarField(ScalarFieldID type, Index3D idx, float val) { scalarFields[static_cast<int>(type)].data.at(cellIndex(idx)) = val; }
+    void overrideScalarField(ScalarFieldID type, std::vector<float> data) { scalarFields[static_cast<int>(type)].data = data; }
 
     void overrideVelocities(std::array<std::vector<float>, Axis::Dim> buffer) {
         u = buffer[Axis::X];
@@ -118,6 +124,7 @@ public:
     float getVelocityW(GridCoord coord) const;
 
     float getScalarField(ScalarFieldID type, GridCoord coord) const;
+    ScalarField& getScalarField(ScalarFieldID type) { return scalarFields[type]; }
 
     float getMaxVelocity() const;
 
@@ -307,3 +314,5 @@ public:
         }
     }
 };
+
+}

@@ -4,6 +4,8 @@
 #include <iostream>
 #include <algorithm>
 
+namespace engine {
+
 /*
     Initializes the grid with 0
 
@@ -23,10 +25,15 @@ void Grid::initialize(Eigen::Vector3i _gridSize, std::array<BoundaryCondition, 6
     w = std::vector<float>(nx * ny * (nz+1), 0);
     
     for(auto& scalarField : scalarFields) {
-        scalarField = std::vector<float>(nx * ny * nz, 0);
+        scalarField = {
+            std::vector<float>(nx * ny * nz, 0),
+            false
+        };
     }
 
-    dx = dy = dz = 1.0/float(nx);
+    scalarFields[ScalarFieldID::Smoke].advect = true;
+
+    dx = dy = dz = 0.3;
     // dy = 1.0/float(ny);
     // dz = 1.0/float(nz);
 }
@@ -86,7 +93,7 @@ float Grid::getExactScalar(ScalarFieldID type, Index3D idx) const {
     idx.i = std::clamp(idx.i, 0, nx-1);
     idx.j = std::clamp(idx.j, 0, ny-1);
     idx.k = std::clamp(idx.k, 0, nz-1);
-    return scalarFields[type].at(cellIndex(idx));
+    return scalarFields[type].data.at(cellIndex(idx));
 }
 
 float Grid::getVelocityU(GridCoord coord) const {
@@ -187,4 +194,6 @@ float Grid::getScalarGradY(ScalarFieldID type, GridCoord coord) const {
 
 float Grid::getScalarGradZ(ScalarFieldID type, GridCoord coord) const {
     return (getScalarField(type, {coord.x, coord.y, coord.z + 0.5f}) - getScalarField(type, {coord.x, coord.y, coord.z - 0.5f})) / dz;
+}
+
 }

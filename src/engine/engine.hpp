@@ -3,6 +3,8 @@
 #include "grid.hpp"
 #include "pressureSolver.hpp"
 
+namespace engine {
+
 class Engine {
     Grid grid;
     PressureSolver pressureSolver;
@@ -17,6 +19,7 @@ public:
     void initSim();
     void adjustTimestep();
     void checkCFDCondition();
+    void spawnSmoke();
     void applyBoundaryCondition();
     void advect();
     void advectVelocities();
@@ -27,3 +30,5 @@ public:
 
     const Grid& getGrid() const { return grid; }
 };
+
+}
