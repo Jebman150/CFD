@@ -5,6 +5,7 @@ namespace renderer {
 
 using engine::Grid;
 using engine::ConstFaceView;
+using engine::ConstCellView;
 using engine::Plane;
 using engine::ScalarFieldID;
 using namespace engine::navigation;
@@ -32,6 +33,8 @@ void Renderer::updateFrame(const Grid& grid) {
     }
 
     drawCoordinateSystem();
+    drawCells(grid);
+    drawFaces(grid);
 
     switch(visMode) {
         case VisMode::Pressure:
@@ -56,9 +59,6 @@ void Renderer::updateFrame(const Grid& grid) {
             drawVelocityPlaneDebug(grid);
     }
 
-
-    //drawCellOutline(grid.getDimensions(Axis::Z));
-
     window.display();
 }
 
@@ -75,47 +75,54 @@ void Renderer::drawCoordinateSystem() {
 }
 
 /*
-    Draws the outline of the discretization grid.
+    Draws the background of the discretization cells.
 
-    @param dimension
-        Grid dimension
+    @param grid
 */
-void Renderer::drawCellOutline(Eigen::Vector2i dimension) {
-    sf::Vector2f cellSize = {parameter.targetRect.size.x / float(dimension.x()), parameter.targetRect.size.y / float(dimension.y())};
+void Renderer::drawCells(const Grid& grid) {
+    sf::Vector2i gridSize = {grid.getWidth(), grid.getHeight()};
+    sf::Vector2f cellSize = {parameter.targetRect.size.x / float(gridSize.x), parameter.targetRect.size.y / float(gridSize.y)};
 
-    for(int x = 0; x < dimension.x(); x++) {
-        for(int y = 0; y < dimension.y(); y++) {
-            auto rect = sf::RectangleShape(cellSize);
-            rect.setOutlineColor(parameter.gridCellColor);
-            rect.setFillColor(sf::Color::Transparent);
-            rect.setOutlineThickness(2);
-            rect.setPosition(parameter.targetRect.position + sf::Vector2f{x*cellSize.x, y*cellSize.y});
+    grid.queryCells([&cellSize, this](ConstCellView cell) {
+        auto rect = sf::RectangleShape(cellSize);
+        rect.setFillColor((cell.type == engine::CellType::Solid) ? parameter.solidCellColor : parameter.fluidCellColor);
+        rect.setPosition(parameter.targetRect.position + sf::Vector2f{cell.idx.i*cellSize.x, cell.idx.j*cellSize.y});
 
-            window.draw(rect);
-        }
-    }
+        window.draw(rect);
+    }, [](ConstCellView cell) {
+        return cell.idx.k == 0;
+    });
 }
 
 /*
-    Draws the pressure of the given grid.
+    Draws the outline of the discretization cells.
 
-    @param gridValues
-        Matrix of the pressure values
+    @param grid
 */
-void Renderer::drawPressureField(const Eigen::MatrixXd& gridValues) {
-    sf::Vector2i gridSize = {static_cast<int>(gridValues.rows()), static_cast<int>(gridValues.cols())};
+void Renderer::drawFaces(const Grid& grid) {
+    sf::Vector2i gridSize = {grid.getWidth(), grid.getHeight()};
     sf::Vector2f cellSize = {parameter.targetRect.size.x / float(gridSize.x), parameter.targetRect.size.y / float(gridSize.y)};
 
-    for(int x = 0; x < gridSize.x; x++) {
-        for(int y = 0; y < gridSize.y; y++) {
-            auto rect = sf::RectangleShape(cellSize);
-            float value = gridValues(x, y);
-            rect.setFillColor(parameter.pressureColor.eval(value));
-            rect.setPosition(parameter.targetRect.position + sf::Vector2f{x*cellSize.x, y*cellSize.y});
-
-            window.draw(rect);
+    grid.queryTangentFaces(
+        {Axis::Z, 0},
+    [&cellSize, this](ConstFaceView face) {
+        if(face.type == engine::FaceType::Solid_Solid) return;
+        sf::Vector2f size;
+        sf::Vector2f offset;
+        if(face.axis == Axis::X) {
+            size = {4, cellSize.y};
+            offset = {2, 0};
+        } else {
+            size = {cellSize.x, 4};
+            offset = {0, 2};
         }
-    }
+        auto rect = sf::RectangleShape(size);
+        rect.setOrigin(offset);
+        rect.setFillColor((face.type == engine::FaceType::Fluid_Fluid) ? parameter.fluidFaceColor : parameter.solidFaceColor);
+        rect.setPosition(parameter.targetRect.position + sf::Vector2f{face.idx.i*cellSize.x, face.idx.j*cellSize.y});
+
+        window.draw(rect);
+    });
 }
 
 /*
@@ -130,7 +137,7 @@ void Renderer::drawDivergenceField(const Grid& grid) {
     for(float x = 0.5; x < gridSize.x; x++) {
         for(float y = 0.5; y < gridSize.y; y++) {
             auto rect = sf::RectangleShape(cellSize);
-            float value = grid.getDivergence({x, y});
+            float value = grid.getDivergence({x, y, 0});
             rect.setFillColor(parameter.pressureColor.eval(value));
             rect.setPosition(parameter.targetRect.position + sf::Vector2f{(x-0.5)*cellSize.x, (y-0.5)*cellSize.y});
 
@@ -147,16 +154,16 @@ void Renderer::drawVelocityPlaneDebug(const Grid& grid) {
     sf::Vector2f cellSize = {parameter.targetRect.size.x / float(gridSize.x), parameter.targetRect.size.y / float(gridSize.y)};
 
     Plane plane = {Axis::Z, 0};
-    grid.forEachTangentVelocity(plane, [this, cellSize](ConstFaceView face) {
+    grid.queryTangentFaces(plane, [this, cellSize](ConstFaceView face) {
         sf::Vector2f size(10, 10);
         sf::Vector2f offset(-5, -5);
         switch(face.axis) {
             case Axis::X: 
-                size = {face.value * 4, 5.f};
+                size = {face.value * 10, 5.f};
                 offset = {0, cellSize.y * 0.5f};
                 break;
             case Axis::Y: 
-                size = {5.f, face.value * 4}; 
+                size = {5.f, face.value * 10}; 
                 offset = {cellSize.x * 0.5f, 0};
                 break;
         }
@@ -181,7 +188,7 @@ void Renderer::drawVelocityFieldHR(const Grid& grid, sf::Vector2i res) {
 
     for(int i = 0; i < res.x; i++) {
         for(int j = 0; j < res.y; j++) {
-            auto vel = grid.interpolateVelocity({stride.x * i, stride.y * j});
+            auto vel = grid.interpolateVelocity({stride.x * i, stride.y * j, 0});
             auto position = parameter.targetRect.position + sf::Vector2f(stride.x * i * cellSize.x, stride.y * j * cellSize.y);
             sf::Vertex line[] = {
                 {position, sf::Color::Cyan},
@@ -206,7 +213,7 @@ void Renderer::drawPressureFieldHR(const Grid& grid, sf::Vector2i res) {
 
     for(int i = 0; i < res.x; i++) {
         for(int j = 0; j < res.y; j++) {
-            double p = grid.getScalarField(ScalarFieldID::Pressure, {stride.x * i, stride.y * j});
+            double p = grid.getScalarField(ScalarFieldID::Pressure, {stride.x * i, stride.y * j, 0});
             auto position = parameter.targetRect.position + sf::Vector2f(stride.x * i * cellSize.x, stride.y * j * cellSize.y);
             sf::RectangleShape rect({stride.x * cellSize.x, stride.y * cellSize.y});
             rect.setPosition(position);
@@ -230,7 +237,7 @@ void Renderer::drawSpeedFieldHR(const Grid& grid, sf::Vector2i res) {
 
     for(int i = 0; i < res.x; i++) {
         for(int j = 0; j < res.y; j++) {
-            double vel = grid.interpolateVelocity({stride.x * i, stride.y * j}).norm();
+            double vel = grid.interpolateVelocity({stride.x * i, stride.y * j, 0}).norm();
             auto position = parameter.targetRect.position + sf::Vector2f(stride.x * i * cellSize.x, stride.y * j * cellSize.y);
             sf::RectangleShape rect({stride.x * cellSize.x, stride.y * cellSize.y});
             rect.setPosition(position);
@@ -254,7 +261,7 @@ void Renderer::drawSmokeFieldHR(const Grid& grid, sf::Vector2i res) {
 
     for(int i = 0; i < res.x; i++) {
         for(int j = 0; j < res.y; j++) {
-            float val = grid.getScalarField(ScalarFieldID::Smoke, {stride.x * i, stride.y * j});
+            float val = grid.getScalarField(ScalarFieldID::Smoke, {stride.x * i, stride.y * j, 0});
             auto position = parameter.targetRect.position + sf::Vector2f(stride.x * i * cellSize.x, stride.y * j * cellSize.y);
             sf::RectangleShape rect({stride.x * cellSize.x, stride.y * cellSize.y});
             rect.setPosition(position);

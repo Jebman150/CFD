@@ -13,22 +13,43 @@ namespace engine {
         3D-Vector for width, height and depth of the discretization grid
     
 */
-void Grid::initialize(Eigen::Vector3i _gridSize, std::array<BoundaryCondition, 6> _boundaryCondition) {
+void Grid::initialize(Eigen::Vector3i _gridSize, std::array<float, 6> _boundaryCondition) {
     nx = _gridSize.x();
     ny = _gridSize.y();
     nz = _gridSize.z();
 
-    boundaryCondition = _boundaryCondition;
+    cellType = std::vector<CellType>(nx * ny * nz, CellType::Fluid);
 
     u = std::vector<float>((nx+1) * ny * nz, 0);
     v = std::vector<float>(nx * (ny+1) * nz, 0);
     w = std::vector<float>(nx * ny * (nz+1), 0);
+
+    uType = std::vector<FaceType>((nx+1) * ny * nz, FaceType::Fluid_Fluid);
+    vType = std::vector<FaceType>(nx * (ny+1) * nz, FaceType::Fluid_Fluid);
+    wType = std::vector<FaceType>(nx * ny * (nz+1), FaceType::Fluid_Fluid);
     
     for(auto& scalarField : scalarFields) {
         scalarField = {
             std::vector<float>(nx * ny * nz, 0),
             false
         };
+    }
+
+    for(int i = 0; i < _boundaryCondition.size(); i++) {
+        Plane plane = getBoundaryPlane(static_cast<Direction>(i));
+        if(_boundaryCondition[i] < 1e-8) {
+            forEachFace([](FaceView face) {
+                face.type = FaceType::Fluid_Solid;
+            }, [&plane](FaceView face) {
+                return face.isInPlane(plane);
+            });
+        } else {
+            forEachFace([](FaceView face) {
+                face.type = FaceType::Fluid_Fluid;
+            }, [&plane](FaceView face) {
+                return face.isInPlane(plane);
+            });
+        }
     }
 
     scalarFields[ScalarFieldID::Smoke].advect = true;
@@ -38,11 +59,18 @@ void Grid::initialize(Eigen::Vector3i _gridSize, std::array<BoundaryCondition, 6
     // dz = 1.0/float(nz);
 }
 
+void Grid::moveCoord(Direction dir, GridCoord& coord, float magnitude) const {
+    Eigen::Vector3f vec = getBasisVector(dir) * magnitude;
+    coord.x += vec.x();
+    coord.y += vec.y();
+    coord.z += vec.z();
+}
+
 float lerp(float x, float y, float t) {
     return x + (y-x) * t;
 }
 
-float biLerp(float ul, float ur, float bl, float br, Eigen::Vector2d pos) {
+float biLerp(float ul, float ur, float bl, float br, Eigen::Vector2f pos) {
     float uInt = lerp(ul, ur, pos.x());
     float bInt = lerp(bl, br, pos.x());
     return lerp(uInt, bInt, pos.y());
@@ -51,7 +79,7 @@ float biLerp(float ul, float ur, float bl, float br, Eigen::Vector2d pos) {
 float triLerp(
     float ulf, float urf, float blf, float brf, // front square
     float ulb, float urb, float blb, float brb, // back square
-    Eigen::Vector3d pos
+    Eigen::Vector3f pos
 ) {
     float fInt = biLerp(ulf, urf, blf, brf, {pos.x(), pos.y()});
     float bInt = biLerp(ulb, urb, blb, brb, {pos.x(), pos.y()});
@@ -61,7 +89,7 @@ float triLerp(
 /*
     Returns the velocity of an arbitrary position in the volume.
 */
-Eigen::Vector3d Grid::interpolateVelocity(GridCoord position) const {
+Eigen::Vector3f Grid::interpolateVelocity(GridCoord position) const {
     float interpolatedX = getVelocityU(position);
     float interpolatedY = getVelocityV(position);
     float interpolatedZ = getVelocityW(position);
@@ -102,7 +130,7 @@ float Grid::getVelocityU(GridCoord coord) const {
     int y = std::floor(shiftedCoord.y);
     int z = std::floor(shiftedCoord.z);
 
-    Eigen::Vector3d localCoord = {shiftedCoord.x - float(x), shiftedCoord.y - float(y), shiftedCoord.z - float(z)};
+    Eigen::Vector3f localCoord = {shiftedCoord.x - float(x), shiftedCoord.y - float(y), shiftedCoord.z - float(z)};
 
     return triLerp(
         getExactU({x, y, z}), getExactU({x + 1, y, z}), getExactU({x, y + 1, z}), getExactU({x + 1, y + 1, z}),
@@ -117,7 +145,7 @@ float Grid::getVelocityV(GridCoord coord) const {
     int y = std::floor(shiftedCoord.y);
     int z = std::floor(shiftedCoord.z);
 
-    Eigen::Vector3d localCoord = {shiftedCoord.x - float(x), shiftedCoord.y - float(y), shiftedCoord.z - float(z)};
+    Eigen::Vector3f localCoord = {shiftedCoord.x - float(x), shiftedCoord.y - float(y), shiftedCoord.z - float(z)};
 
     return triLerp(
         getExactV({x, y, z}), getExactV({x + 1, y, z}), getExactV({x, y + 1, z}), getExactV({x + 1, y + 1, z}),
@@ -132,7 +160,7 @@ float Grid::getVelocityW(GridCoord coord) const {
     int y = std::floor(shiftedCoord.y);
     int z = std::floor(shiftedCoord.z);
 
-    Eigen::Vector3d localCoord = {shiftedCoord.x - float(x), shiftedCoord.y - float(y), shiftedCoord.z - float(z)};
+    Eigen::Vector3f localCoord = {shiftedCoord.x - float(x), shiftedCoord.y - float(y), shiftedCoord.z - float(z)};
 
     return triLerp(
         getExactW({x, y, z}), getExactW({x + 1, y, z}), getExactW({x, y + 1, z}), getExactW({x + 1, y + 1, z}),
@@ -160,7 +188,7 @@ float Grid::getScalarField(ScalarFieldID type, GridCoord coord) const {
     int y = std::floor(shiftedCoord.y);
     int z = std::floor(shiftedCoord.z);
 
-    Eigen::Vector3d localCoord = {shiftedCoord.x - float(x), shiftedCoord.y - float(y), shiftedCoord.z - float(z)};
+    Eigen::Vector3f localCoord = {shiftedCoord.x - float(x), shiftedCoord.y - float(y), shiftedCoord.z - float(z)};
 
     return triLerp(
         getExactScalar(type, {x, y, z}), getExactScalar(type, {x + 1, y, z}), getExactScalar(type, {x, y + 1, z}), getExactScalar(type, {x + 1, y + 1, z}),

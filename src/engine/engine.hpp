@@ -14,11 +14,13 @@ class Engine {
     float cTarget = 2;
     float density = 1000.f;
     float currentT = 0;
-    float boundaryVelocity = 5.f;
+    std::array<float, 6> boundaryConditions;
 public:
     void initSim();
     void adjustTimestep();
     void checkCFDCondition();
+    void setSolidCells();
+    void updateFaceTypes();
     void spawnSmoke();
     void applyBoundaryCondition();
     void advect();

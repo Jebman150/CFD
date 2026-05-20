@@ -16,14 +16,16 @@ int main() {
     engine.initSim();
     renderer.initialize();
     renderer.setVisMode(renderer::VisMode::Smoke);
-    engine.spawnSmoke();
+    engine.setSolidCells();
+    engine.updateFaceTypes();
 
     while(renderer.active()) {
         tracer.startJob("Frame");
         auto frameStart = std::chrono::high_resolution_clock::now();
         engine.adjustTimestep();
-        //std::this_thread::sleep_for(1000ms / 30 * engine.getDeltatime());
+        //std::this_thread::sleep_for(1000ms);
 
+        engine.spawnSmoke();
 
         tracer.startJob("Advect");
         engine.applyBoundaryCondition();
@@ -36,6 +38,7 @@ int main() {
         tracer.endJob("Project");
 
         tracer.startJob("Render");
+        engine.applyBoundaryCondition();
         renderer.updateFrame(engine.getGrid());
         tracer.endJob("Render");
         tracer.endJob("Frame");

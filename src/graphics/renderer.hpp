@@ -32,8 +32,9 @@ class Renderer {
     sf::Vector2i resolution = {100, 100};
 
     void drawCoordinateSystem();
-    void drawCellOutline(Eigen::Vector2i dimensions);
-    void drawPressureField(const Eigen::MatrixXd& gridValues);
+    void drawCells(const Grid& grid);
+    void drawFaces(const Grid& grid);
+
     void drawDivergenceField(const Grid& grid);
 
     void drawVelocityPlaneDebug(const Grid& grid);

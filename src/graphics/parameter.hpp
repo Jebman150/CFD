@@ -25,8 +25,15 @@ struct GraphicalParameter {
     const sf::Color yAxis = sf::Color::Blue;
     const sf::Color zAxis = sf::Color::Green;
 
-    const sf::Color gridCellColor = sf::Color(90, 90, 90, 20);
+    const sf::Color cellOutlineColor = sf::Color(90, 90, 90, 20);
     const sf::Color backgroundColor = sf::Color(10, 10, 20);
+
+    const sf::Color solidCellColor = sf::Color(20, 20, 20);
+    const sf::Color fluidCellColor = sf::Color(30, 30, 30);
+
+    const sf::Color solidFaceColor = sf::Color(0, 0, 0);
+    const sf::Color fluidFaceColor = sf::Color(50, 50, 50);
+
     const ColorGradient pressureColor = {
         .colorLow = sf::Color::Blue,
         .colorHigh = sf::Color::Red,
@@ -43,7 +50,7 @@ struct GraphicalParameter {
         .negative = true
     };
     const ColorGradient smokeColor = {
-        .colorLow = sf::Color::Black,
+        .colorLow = sf::Color(0, 0, 0, 0),
         .colorHigh = sf::Color::White,
         .negative = false
     };

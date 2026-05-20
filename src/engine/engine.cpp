@@ -11,13 +11,22 @@ namespace engine {
 void Engine::initSim() {
     deltaT = 0.05;
     Eigen::Vector3i gridSize = {50, 50, 1};
+    boundaryConditions = {1.f, 1.f, 0.f, 0.f, 0.f, 0.f};
+    
+    float sum = 0;
+    bool inflow = true;
+    for(auto cond : boundaryConditions) {
+        sum += inflow ? cond : -cond;
+        inflow = !inflow;
+    }
+    if(std::abs(sum) > 1e-8) std::cout << "WARNING: Invalid boundary conditions!" << std::endl;
 
     grid.initialize(
         gridSize,
-        {Wall, Wall, Wall, Wall, Wall, Wall}
+        boundaryConditions
     );
 
-    pressureSolver.initialize(gridSize, {grid.getDx(), grid.getDy(), grid.getDz()});
+    pressureSolver.initialize(grid, {grid.getDx(), grid.getDy(), grid.getDz()});
 }
 
 /*
@@ -38,40 +47,62 @@ void Engine::checkCFDCondition() {
 }
 
 void Engine::applyBoundaryCondition() {
-    for(int dir = 0; dir < Direction::NUM; dir++) {
-        Direction direction = static_cast<Direction>(dir);
-        auto condition = grid.getBoundaryCondition(direction);
-        if(condition == Open) continue;
+    // Internal faces
+    grid.forEachFace([](FaceView face){
+        face.value = 0;
+    }, [](FaceView face) {
+        return face.type == FaceType::Solid_Solid || face.type == FaceType::Fluid_Solid || face.type == FaceType::Solid_Fluid;
+    });
 
-        float inflowSign = (dir%2 == 0) ? 1 : -1;
-        float vel = (condition == Wall) ? 0 : ((condition == Inflow || condition == partialInflow) ? inflowSign : -inflowSign);
-        vel *= boundaryVelocity;
-        auto plane = grid.getBoundaryPlane(direction);
-        grid.forEachVelocity(plane, [this, vel, condition](FaceView face){
-            if(condition != partialInflow && condition != partialOutflow) {
-                face.value = vel;
-            } else {
-                switch(face.axis) {
-                    case Axis::X: face.value = (face.idx.j == 0 || face.idx.j == grid.getHeight()-1) ? 0 : vel; break;
-                    case Axis::Y: face.value = (face.idx.i == 0 || face.idx.i == grid.getWidth()-1) ? 0 : vel; break;
-                    case Axis::Z: face.value = (face.idx.j == 0 || face.idx.j == grid.getHeight()-1) ? 0 : vel; break;
-                }
-                
-            }
+    // Domain boundary flow
+    for(int dir = 0; dir < Direction::NUM; dir++) {
+        float value = boundaryConditions[dir];
+        grid.forEachFace(grid.getBoundaryPlane(static_cast<Direction>(dir)), [value](FaceView face){
+            face.value = value;
+            if(std::abs(value) > 1e-8) face.type = Fluid_Fluid;
         });
     }
 }
 
+void Engine::setSolidCells() {
+    Eigen::Vector3f center = {grid.getWidth()/2.f, grid.getHeight()/2.f, grid.getDepth()/2.f};
+    float radius = 4;
+
+    grid.forEachCell([this](CellView cell) {
+        cell.type = CellType::Solid;
+    }, [&radius, &center](CellView cell) {
+        Eigen::Vector3f coord = cell.coord;
+        return (coord-center).norm() < radius;
+    });
+}
+
+void Engine::updateFaceTypes() {
+    grid.forEachFace([this](FaceView face) {
+        auto adjacentCellIndices = face.idx.getFaceCellIndices(face.axis);
+        CellType left = grid.getCellType(adjacentCellIndices[0]);
+        CellType right = grid.getCellType(adjacentCellIndices[1]);
+        if(left == CellType::Fluid) {
+            if(right == CellType::Fluid) {
+                face.type = Fluid_Fluid;
+            } else {
+                face.type = Fluid_Solid;
+            }
+        } else {
+            if(right == CellType::Fluid) {
+                face.type = Solid_Fluid;
+            } else {
+                face.type = Solid_Solid;
+            }
+        }
+    });
+}
+
 void Engine::spawnSmoke() {
     Eigen::Vector3f center = {grid.getWidth()/2.f, grid.getHeight()/2.f, grid.getDepth()/2.f};
-    float radius = 2;
+    int height = 4;
     for(int k = 0; k < grid.getDepth(); k++) {
-        for(int j = 0; j < grid.getHeight(); j++) {
-            for(int i = 0; i < grid.getWidth(); i++) {
-                if(std::abs(i - center.x()) < 4 && std::abs(j - center.y()) < 4 && std::abs(k - center.z()) < 4) {
-                    grid.setScalarField(ScalarFieldID::Smoke, {i, j, k}, 1.f);
-                }
-            }
+        for(int j = center.y()-height; j < center.y()+height; j++) {
+            grid.setScalarField(ScalarFieldID::Smoke, {1, j, k}, 1.f);
         }
     }
 }
@@ -98,10 +129,10 @@ void Engine::advectVelocities() {
         Axis axis = static_cast<Axis>(ax);
         for(int i = 1; i < grid.getSize(axis); i++) {
             Plane plane = {axis, i};
-            grid.forEachVelocity(plane, [this, &velocityBuffer, ax](FaceView face) {
-                Eigen::Vector3d currentVelocity = grid.interpolateVelocity(face.coord);
-                Eigen::Vector3d oldPosVec = Eigen::Vector3d{face.coord.x, face.coord.y, face.coord.z} - currentVelocity * deltaT;
-                GridCoord oldCoord = {oldPosVec.x(), oldPosVec.y(), oldPosVec.z()};
+            grid.forEachFace(plane, [this, &velocityBuffer, ax](FaceView face) {
+                Eigen::Vector3f currentVelocity = grid.interpolateVelocity(face.coord);
+                Eigen::Vector3f pos = face.coord;
+                GridCoord oldCoord = GridCoord(pos - currentVelocity * deltaT);
                 velocityBuffer[ax].at(grid.getVelocityIndex(face.axis, face.idx)) = grid.interpolateVelocity(oldCoord)[ax];
             });
         }
@@ -117,16 +148,12 @@ void Engine::advectScalarFields() {
 
         std::vector<float> buffer(grid.getWidth() * grid.getHeight() * grid.getDepth());
 
-        for(int k = 0; k < grid.getDepth(); k++) {
-            for(int j = 0; j < grid.getHeight(); j++) {
-                for(int i = 0; i < grid.getWidth(); i++) {
-                    GridCoord coord = grid.coordFromCellIndex({i, j, k});
-                    Eigen::Vector3d currentVelocity = grid.interpolateVelocity(coord);
-                    Eigen::Vector3d oldPosVec = Eigen::Vector3d{coord.x, coord.y, coord.z} - currentVelocity * deltaT;
-                    GridCoord oldCoord = {oldPosVec.x(), oldPosVec.y(), oldPosVec.z()};
-                    buffer.at(grid.cellIndex({i, j, k})) = grid.getScalarField(static_cast<ScalarFieldID>(id), oldCoord);
-                }
-            }
+        for(Indexer3D idxer(grid.getWidth(), grid.getHeight(), grid.getDepth()); !idxer.end(); idxer++) {
+            GridCoord coord = grid.coordFromCellIndex(idxer.get());
+            Eigen::Vector3f currentVelocity = grid.interpolateVelocity(coord);
+            Eigen::Vector3f pos = coord;
+            GridCoord oldCoord = GridCoord(pos - currentVelocity * deltaT);
+            buffer.at(grid.cellIndex(idxer.get())) = grid.getScalarField(static_cast<ScalarFieldID>(id), oldCoord);
         }
 
         grid.overrideScalarField(static_cast<ScalarFieldID>(id), buffer);
@@ -139,9 +166,15 @@ void Engine::advectScalarFields() {
 */
 void Engine::project() {
     //Add artificial movement in grid
-    Index3D artificialMovCoord = {std::round(grid.getWidth() / 2.0), std::round(grid.getHeight() / 2.0), 0};
-    grid.setVelocityV(artificialMovCoord, 300 * sin(3 * currentT));
-    grid.setVelocityU(artificialMovCoord, 300 * cos(3 * currentT));
+    //Index3D artificialMovCoord = {std::round(grid.getWidth() / 2.0), std::round(grid.getHeight() / 2.0), 0};
+    //grid.setVelocityV(artificialMovCoord, 300 * sin(3 * currentT));
+    //grid.setVelocityU(artificialMovCoord, 300 * cos(3 * currentT));
+    //grid.forEachFace([](FaceView face) {
+    //    face.value = 1.f;
+    //}, [](FaceView face) {
+    //    return face.axis == Axis::X && face.idx.i == 1 && std::fabs(face.idx.j - 7.f) < 4;
+    //});
+    //grid.setVelocityU({1, 7, 0}, 1.f);
 
     int width = grid.getWidth();
     int height = grid.getHeight();
@@ -159,27 +192,23 @@ void Engine::project() {
     }
     d = d * (density / deltaT);
     d.array() -= d.mean();
-    //if(std::abs(d.sum()) > 0.1) {
-    //    std::cout << "WARNING: Problem singular!" << std::endl;
-    //    std::cout << "Sum of divergence: " << std::abs(d.sum()) << std::endl;
-    //}
+    if(std::abs(d.sum()) > 0.1) {
+        std::cout << "WARNING: Problem singular!" << std::endl;
+        std::cout << "Sum of divergence: " << std::abs(d.sum()) << std::endl;
+    }
 
     Eigen::VectorXf p = pressureSolver.computePressure(d);
 
     counter = 0;
-    for(int k = 0; k < depth; k++) {
-        for(int j = 0; j < height; j++) {
-            for(int i = 0; i < width; i++) {
-                grid.setScalarField(ScalarFieldID::Pressure, {i, j, k}, p(counter++));
-            }
-        }
+    for(Indexer3D idxer(grid.getWidth(), grid.getHeight(), grid.getDepth()); !idxer.end(); idxer++) {
+        grid.setScalarField(ScalarFieldID::Pressure, idxer.get(), p(counter++));
     }
 
     for(int ax = 0; ax < Axis::Dim; ax++) {
         Axis axis = static_cast<Axis>(ax);
         for(int i = 1; i < grid.getSize(axis); i++) {
             Plane plane = {axis, i};
-            grid.forEachVelocity(plane, [this](FaceView face) {
+            grid.forEachFace(plane, [this](FaceView face) {
                 GridCoord coord = face.coord;
                 face.value -= (deltaT / density) * (grid.getScalarGradient(ScalarFieldID::Pressure, coord, face.axis));
             });

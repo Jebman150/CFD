@@ -13,7 +13,8 @@ Eigen::VectorXf PressureSolver::computePressure(const Eigen::VectorXf& divergenc
     if(r.norm()/divergence.norm() < tolerance) return p;
 
     Eigen::VectorXf z(divergence.size());   //auxiliary vector
-    applyPreconditioner(r, z);  
+    //applyPreconditioner(r, z);
+    z = r;
     Eigen::VectorXf s = z;      //search vector
     float sigma = r.dot(z);
     if(std::abs(sigma) < 1e-20)   //invalid state
@@ -31,7 +32,8 @@ Eigen::VectorXf PressureSolver::computePressure(const Eigen::VectorXf& divergenc
         p += alpha * s;
         r -= alpha * z;
         if(r.norm()/divergence.norm() < tolerance) return p;
-        applyPreconditioner(r, z);
+        //applyPreconditioner(r, z);
+        z = r;
         auto sigmaNew = r.dot(z);
         auto beta = sigmaNew / sigma;
         s = z + beta*s;
@@ -45,45 +47,22 @@ Eigen::VectorXf PressureSolver::computePressure(const Eigen::VectorXf& divergenc
 }
 
 void PressureSolver::applyA(const Eigen::VectorXf& d, Eigen::VectorXf& Ad) {
-    for(int z = 0; z < gridSize.z(); z++) {
-        for(int y = 0; y < gridSize.y(); y++) {
-            for(int x = 0; x < gridSize.x(); x++) {
-                float diag = 0.f;
-                float sum = 0.f;
-
-                //X
-                if (x > 0) {
-                    sum += c.x() * d[cellIndex(x-1, y, z)];
-                    diag += c.x();
-                }
-                if (x < gridSize.x() - 1) {
-                    sum += c.x()  * d[cellIndex(x+1, y, z)];
-                    diag += c.x();
-                }
-
-                // Y
-                if (y > 0) {
-                    sum += c.y() * d[cellIndex(x, y-1, z)];
-                    diag += c.y();
-                }
-                if (y < gridSize.y() - 1) {
-                    sum += c.y() * d[cellIndex(x, y+1, z)];
-                    diag += c.y();
-                }
-
-                // Z
-                if (z > 0) {
-                    sum += c.z() * d[cellIndex(x, y, z-1)];
-                    diag += c.z();
-                }
-                if (z < gridSize.z() - 1) {
-                    sum += c.z() * d[cellIndex(x, y, z+1)];
-                    diag += c.z();
-                }
-
-                Ad(cellIndex(x, y, z)) = diag * d(cellIndex(x, y, z)) - sum;
-            }
+    for(Indexer3D idxer(gridSize); !idxer.end(); idxer++) {
+        Index3D idx = idxer.get();
+        if(grid->getCellType(idx) == CellType::Solid) {
+            Ad[cellIndex(idx)] = d[cellIndex(idx)];
+            continue;
         }
+        float diag = 0.f;
+        float sum = 0.f;
+
+        grid->forEachNeighbour(idx, [this, &diag, &sum, &d](ConstCellView cell) {
+            if(cell.type == CellType::Solid) return;
+            sum += cell.offset * d[cellIndex(cell.idx.i, cell.idx.j, cell.idx.k)];
+            diag += cell.offset;
+        });
+
+        Ad(cellIndex(idx)) = diag * d(cellIndex(idx)) - sum;
     }
 }
 
@@ -91,52 +70,46 @@ void PressureSolver::applyPreconditioner(const Eigen::VectorXf& v, Eigen::Vector
     auxiliaryVec.setZero();
     LLTz.setZero();
     float t = 0;
-    for(int z = 0; z < gridSize.z(); z++) {
-        for(int y = 0; y < gridSize.y(); y++) {
-            for(int x = 0; x < gridSize.x(); x++) {
-                t = v(cellIndex(x, y, z));
-                if((x-1) >= 0) t -= getA({x-1, y, z}, Axis::X) * preconditioner.at(cellIndex(x-1, y, z)) * auxiliaryVec(cellIndex(x-1, y, z));
-                if((y-1)>= 0) t -= getA({x, y-1, z}, Axis::Y) * preconditioner.at(cellIndex(x, y-1, z)) * auxiliaryVec(cellIndex(x, y-1, z));
-                if((z-1) >= 0) t -= getA({x, y, z-1}, Axis::Z) * preconditioner.at(cellIndex(x, y, z-1)) * auxiliaryVec(cellIndex(x, y, z-1));
-                auxiliaryVec(cellIndex(x, y, z)) = t * preconditioner.at(cellIndex(x, y, z));
-            }
+    using namespace engine::navigation;
+    for(Indexer3D idxer(gridSize); !idxer.end(); idxer++) {
+        Index3D idx = idxer.get();
+        t = v(cellIndex(idx));
+        auto precIndices = idx.getPreceding();
+        for(int i = 0; i < Axis::Dim; i++) {
+            Index3D pIdx = precIndices[i];
+            if(pIdx.isPositive()) t -= getA(pIdx, static_cast<Axis>(i)) * preconditioner.at(cellIndex(pIdx)) * auxiliaryVec(cellIndex(pIdx));
         }
+        auxiliaryVec(cellIndex(idx)) = t * preconditioner.at(cellIndex(idx));
     }
 
-    for(int z = gridSize.z()-1; z >= 0; --z) {
-        for(int y = gridSize.y()-1; y >= 0; --y) {
-            for(int x = gridSize.x()-1; x >= 0; --x) {
-                t = auxiliaryVec(cellIndex(x, y, z));
-                if(x+1 < gridSize.x()) t -= getA({x, y, z}, Axis::X) * preconditioner.at(cellIndex(x, y, z)) * LLTz(cellIndex(x+1, y, z));
-                if(y+1 < gridSize.y()) t -= getA({x, y, z}, Axis::Y) * preconditioner.at(cellIndex(x, y, z)) * LLTz(cellIndex(x, y+1, z));
-                if(z+1 < gridSize.z()) t -= getA({x, y, z}, Axis::Z) * preconditioner.at(cellIndex(x, y, z)) * LLTz(cellIndex(x, y, z+1));
-                LLTz(cellIndex(x, y, z)) = t * preconditioner.at(cellIndex(x, y, z));
-            }
-        }
+    for(Indexer3D idxer(gridSize, true); !idxer.end(); idxer--) {
+        Index3D idx = idxer.get();
+        t = auxiliaryVec(cellIndex(idx));
+        if(idx.i+1 < gridSize.x()) t -= getA(idx, Axis::X) * preconditioner.at(cellIndex(idx)) * LLTz(cellIndex(idx.i+1, idx.j, idx.k));
+        if(idx.j+1 < gridSize.y()) t -= getA(idx, Axis::Y) * preconditioner.at(cellIndex(idx)) * LLTz(cellIndex(idx.i, idx.j+1, idx.k));
+        if(idx.k+1 < gridSize.z()) t -= getA(idx, Axis::Z) * preconditioner.at(cellIndex(idx)) * LLTz(cellIndex(idx.i, idx.j, idx.k+1));
+        LLTz(cellIndex(idx)) = t * preconditioner.at(cellIndex(idx));
     }
 }
 
 void PressureSolver::buildPreconditioner() {
     preconditioner.assign(gridSize.x()*gridSize.y()*gridSize.z(), 1.f);
 
-    for(int z = 0; z < gridSize.z(); z++) {
-        for(int y = 0; y < gridSize.y(); y++) {
-            for(int x = 0; x < gridSize.x(); x++) {
-                float e = getDiagA({x, y, z});
-                if(x-1 >= 0) e -=   (getA({x-1, y, z}, Axis::X) * preconditioner.at(cellIndex(x-1, y, z))) *
-                                    (getA({x-1, y, z}, Axis::X) * preconditioner.at(cellIndex(x-1, y, z)));
-                if(y-1 >= 0) e -=   (getA({x, y-1, z}, Axis::Y) * preconditioner.at(cellIndex(x, y-1, z))) *
-                                    (getA({x, y-1, z}, Axis::Y) * preconditioner.at(cellIndex(x, y-1, z)));
-                if(z-1 >= 0) e -=   (getA({x, y, z-1}, Axis::Z) * preconditioner.at(cellIndex(x, y, z-1))) *
-                                    (getA({x, y, z-1}, Axis::Z) * preconditioner.at(cellIndex(x, y, z-1)));
-                float s = 0.f;
-                if(x-1 >= 0) s +=   getA({x-1, y, z}, Axis::X) * (getA({x-1, y, z}, Axis::Y) + getA({x-1, y, z}, Axis::Z)) * preconditioner.at(cellIndex(x-1, y, z)) * preconditioner.at(cellIndex(x-1, y, z));
-                if(y-1 >= 0) s +=   getA({x, y-1, z}, Axis::Y) * (getA({x, y-1, z}, Axis::X) + getA({x, y-1, z}, Axis::Z)) * preconditioner.at(cellIndex(x, y-1, z)) * preconditioner.at(cellIndex(x, y-1, z));
-                if(z-1 >= 0) s +=   getA({x, y, z-1}, Axis::Z) * (getA({x, y, z-1}, Axis::X) + getA({x, y, z-1}, Axis::Y)) * preconditioner.at(cellIndex(x, y, z-1)) * preconditioner.at(cellIndex(x, y, z-1));
-                e -= tuningConstant * s;
-                preconditioner.at(cellIndex(x, y, z)) = 1.f/std::sqrtf(std::max(e, 1e-6f));
-            }
+    for(Indexer3D idxer(gridSize); !idxer.end(); idxer++) {
+        Index3D idx = idxer.get();
+        float e = getDiagA(idx);
+        auto pInd = idx.getPreceding();
+        for(int i = 0; i < Axis::Dim; i++) {
+            Index3D pIdx = pInd[i];
+            if(pIdx.isPositive()) e -=  (getA(pIdx, static_cast<Axis>(i)) * preconditioner.at(cellIndex(pIdx))) *
+                                        (getA(pIdx, static_cast<Axis>(i)) * preconditioner.at(cellIndex(pIdx)));
         }
+        float s = 0.f;
+        if(pInd[0].isPositive()) s +=   getA(pInd[0], Axis::X) * (getA(pInd[0], Axis::Y) + getA(pInd[0], Axis::Z)) * preconditioner.at(cellIndex(pInd[0])) * preconditioner.at(cellIndex(pInd[0]));
+        if(pInd[1].isPositive()) s +=   getA(pInd[1], Axis::Y) * (getA(pInd[1], Axis::X) + getA(pInd[1], Axis::Z)) * preconditioner.at(cellIndex(pInd[1])) * preconditioner.at(cellIndex(pInd[1]));
+        if(pInd[2].isPositive()) s +=   getA(pInd[2], Axis::Z) * (getA(pInd[2], Axis::X) + getA(pInd[2], Axis::Y)) * preconditioner.at(cellIndex(pInd[2])) * preconditioner.at(cellIndex(pInd[2]));
+        e -= tuningConstant * s;
+        preconditioner.at(cellIndex(idx)) = 1.f/std::sqrtf(std::max(e, 1e-6f));
     }
 }
 
