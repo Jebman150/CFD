@@ -48,7 +48,7 @@ Eigen::VectorXf PressureSolver::computePressure(const Eigen::VectorXf& divergenc
 
 void PressureSolver::applyA(const Eigen::VectorXf& d, Eigen::VectorXf& Ad) {
     for(Indexer3D idxer(gridSize); !idxer.end(); idxer++) {
-        Index3D idx = idxer.get();
+        MultiIndex idx = idxer.get();
         if(grid->getCellType(idx) == CellType::Solid) {
             Ad[cellIndex(idx)] = d[cellIndex(idx)];
             continue;
@@ -72,18 +72,18 @@ void PressureSolver::applyPreconditioner(const Eigen::VectorXf& v, Eigen::Vector
     float t = 0;
     using namespace engine::navigation;
     for(Indexer3D idxer(gridSize); !idxer.end(); idxer++) {
-        Index3D idx = idxer.get();
+        MultiIndex idx = idxer.get();
         t = v(cellIndex(idx));
         auto precIndices = idx.getPreceding();
         for(int i = 0; i < Axis::Dim; i++) {
-            Index3D pIdx = precIndices[i];
+            MultiIndex pIdx = precIndices[i];
             if(pIdx.isPositive()) t -= getA(pIdx, static_cast<Axis>(i)) * preconditioner.at(cellIndex(pIdx)) * auxiliaryVec(cellIndex(pIdx));
         }
         auxiliaryVec(cellIndex(idx)) = t * preconditioner.at(cellIndex(idx));
     }
 
     for(Indexer3D idxer(gridSize, true); !idxer.end(); idxer--) {
-        Index3D idx = idxer.get();
+        MultiIndex idx = idxer.get();
         t = auxiliaryVec(cellIndex(idx));
         if(idx.i+1 < gridSize.x()) t -= getA(idx, Axis::X) * preconditioner.at(cellIndex(idx)) * LLTz(cellIndex(idx.i+1, idx.j, idx.k));
         if(idx.j+1 < gridSize.y()) t -= getA(idx, Axis::Y) * preconditioner.at(cellIndex(idx)) * LLTz(cellIndex(idx.i, idx.j+1, idx.k));
@@ -96,11 +96,11 @@ void PressureSolver::buildPreconditioner() {
     preconditioner.assign(gridSize.x()*gridSize.y()*gridSize.z(), 1.f);
 
     for(Indexer3D idxer(gridSize); !idxer.end(); idxer++) {
-        Index3D idx = idxer.get();
+        MultiIndex idx = idxer.get();
         float e = getDiagA(idx);
         auto pInd = idx.getPreceding();
         for(int i = 0; i < Axis::Dim; i++) {
-            Index3D pIdx = pInd[i];
+            MultiIndex pIdx = pInd[i];
             if(pIdx.isPositive()) e -=  (getA(pIdx, static_cast<Axis>(i)) * preconditioner.at(cellIndex(pIdx))) *
                                         (getA(pIdx, static_cast<Axis>(i)) * preconditioner.at(cellIndex(pIdx)));
         }
@@ -113,7 +113,7 @@ void PressureSolver::buildPreconditioner() {
     }
 }
 
-float PressureSolver::getA(Index3D idx, Axis axis) {
+float PressureSolver::getA(MultiIndex idx, Axis axis) {
     if(idx.i < 0 || idx.j < 0 || idx.k < 0) return 0;
     switch(axis) {
         case Axis::X:
@@ -126,7 +126,7 @@ float PressureSolver::getA(Index3D idx, Axis axis) {
     return 0;
 }
 
-float PressureSolver::getDiagA(Index3D idx) {
+float PressureSolver::getDiagA(MultiIndex idx) {
     float sum = 0.f;
     sum += static_cast<int>(idx.i > 0) * c.x();
     sum += static_cast<int>(idx.i < gridSize.x()-1) * c.x();

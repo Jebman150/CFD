@@ -25,15 +25,15 @@ class PressureSolver {
     inline int cellIndex(int i, int j, int k) const {
         return i + gridSize.x() * (j + gridSize.y() * k);
     }
-    inline int cellIndex(Index3D idx) const {
+    inline int cellIndex(MultiIndex idx) const {
         return idx.i + gridSize.x() * (idx.j + gridSize.y() * idx.k);
     }
     void applyA(const Eigen::VectorXf& v, Eigen::VectorXf& Av);
     void applyPreconditioner(const Eigen::VectorXf& v, Eigen::VectorXf& Mv);
     void buildPreconditioner();
 
-    float getA(Index3D idx, Axis axis);
-    float getDiagA(Index3D idx);
+    float getA(MultiIndex idx, Axis axis);
+    float getDiagA(MultiIndex idx);
 public:
     void initialize(const Grid& _grid, Eigen::Vector3f _d) {
         grid = &_grid;

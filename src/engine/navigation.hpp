@@ -11,147 +11,175 @@ namespace navigation {
         X, Y, Z, Dim
     };
 
-    struct Index3D {
-        int i, j, k;
-
-        std::array<Index3D, 6> getNeighbours() const {
-            return std::array<Index3D, 6>{
-                Index3D{i-1, j, k},
-                Index3D{i+1, j, k},
-                Index3D{i, j-1, k},
-                Index3D{i, j+1, k},
-                Index3D{i, j, k-1},
-                Index3D{i, j, k+1},
-            };
-        }
-
-        std::array<Index3D, 3> getPreceding() const {
-            return std::array<Index3D, 3>{
-                Index3D{i-1, j, k},
-                Index3D{i, j-1, k},
-                Index3D{i, j, k-1},
-            };
-        }
-
-        std::array<Index3D, 6> getCellFaceIndices() const {
-            return std::array<Index3D, 6>{
-                Index3D{i, j, k},
-                Index3D{i+1, j, k},
-                Index3D{i, j, k},
-                Index3D{i, j+1, k},
-                Index3D{i, j, k},
-                Index3D{i, j, k+1},
-            };
-        }
-
-        std::array<Index3D, 2> getFaceCellIndices(Axis axis) const {
-            switch (axis) {
-                case Axis::X:
-                    return std::array<Index3D, 2> {
-                        Index3D{i-1, j, k},
-                        Index3D{i, j, k}
-                    };
-                case Axis::Y:
-                    return std::array<Index3D, 2> {
-                        Index3D{i, j-1, k},
-                        Index3D{i, j, k}
-                    };
-                case Axis::Z:
-                    return std::array<Index3D, 2> {
-                        Index3D{i, j, k-1},
-                        Index3D{i, j, k}
-                    };
+    struct MultiIndex {
+    private:
+        
+        void computeStride() {
+            stride[0] = 1;
+            for(int i = 1; i < Axis::Dim; i++) {
+                stride[i] = stride[i-1] * size[i-1];
             }
-            return std::array<Index3D, 2> {
-                Index3D{i-1, j, k},
-                Index3D{i, j, k}
-            };
+            nMax = stride[Axis::Dim-1] * size[Axis::Dim-1];
         }
-
-        bool isPositive() const {
-            return (i>=0) && (j>=0) && (k>=0);
-        }
-    };
-
-    class Indexer3D {
-        int nx, ny, nz;
-        int i = 0, j = 0, k = 0;
+    protected:
+        using IndexArray = std::array<int, Axis::Dim>;
         int idx = 0;
+        IndexArray size;
+        IndexArray stride;
+        int nMax = 0;
 
     public:
-        Indexer3D(int _nx, int _ny, int _nz, bool backward = false) : nx(_nx), ny(_ny), nz(_nz) {
-            if(backward) {
-                i = nx-1;
-                j = ny-1;
-                k = nz-1;
-            }
+        MultiIndex() {}
+        MultiIndex(IndexArray _size) : size(_size) {
+            computeStride();
         }
-        Indexer3D(Eigen::Vector3i size, bool backward = false) : nx(size.x()), ny(size.y()), nz(size.z()) {
-            if(backward) {
-                i = nx-1;
-                j = ny-1;
-                k = nz-1;
+        MultiIndex(IndexArray _size, IndexArray _initializer) : size(_size) {
+            computeStride();
+            for(int i = 0; i < Axis::Dim; i++) {
+                idx += _initializer[i] * stride[i];
             }
         }
 
-        Index3D get() const { return {i, j, k}; }
-        Indexer3D& operator++() {
+        MultiIndex& operator++(int) {
             idx++;
-            i++;
-            if(i >= nx) {
-                i = 0;
-                j++;
-            }
-            if(j >= ny) {
-                j = 0;
-                k++;
-            }
             return *this;
         }
 
-        Indexer3D operator++(int) {
-            Indexer3D old = *this;
-            operator++();
-            return old;
-        }
-
-        Indexer3D& operator--() {
-            idx++;
-            i--;
-            if(i < 0) {
-                i = nx;
-                j--;
-            }
-            if(j < 0) {
-                j = ny;
-                k--;
-            }
+        MultiIndex& operator--(int) {
+            idx--;
             return *this;
         }
 
-        Indexer3D operator--(int) {
-            Indexer3D old = *this;
-            operator--();
-            return old;
+        MultiIndex& operator+=(int i) {
+            idx += i;
+            return *this;
         }
 
-        bool end() const { return idx >= (nx * ny * nz); }
-        bool operator== (const int& other) { return (idx == other); };
-        bool operator!= (const int& other) { return (idx != other); };
-        bool operator< (const int& other) { return (idx < other); };
-        bool operator> (const int& other) { return (idx > other); };
+        MultiIndex& operator-=(int i) {
+            idx -= i;
+            return *this;
+        }
+
+        void advance(Axis axis, int n) {
+            idx += stride[axis] * n;
+        }
+
+        MultiIndex getSucceeding(Axis axis) {
+            MultiIndex result = *this;
+            result.advance(axis, 1);
+            if(result.isValid()) return result;
+            return *this;
+        }
+
+        int get() const {
+            return idx;
+        }
+
+        bool overflow() const {
+            return idx >= nMax;
+        }
+
+        bool underflow() const {
+            return idx < 0;
+        }
+
+        bool isValid() const {
+            return !underflow() && !overflow();
+        }
+
+        IndexArray getIndices() const {
+            IndexArray result;
+            for(int i = 0; i < Axis::Dim; i++) {
+                result[i] = (idx / stride[i]) % size[i];
+            }
+            return result;
+        }
+
+        std::vector<MultiIndex> getPreceding() const {
+            std::vector<MultiIndex> result;
+            for(int i = 0; i < Axis::Dim; i++) {
+                MultiIndex idx = *this;
+                idx.idx -= stride[i];
+                if(idx.isValid()) result.emplace_back(idx);
+            }
+            return result;
+        }
+
+        std::vector<MultiIndex> getSucceeding() const {
+            std::vector<MultiIndex> result;
+            for(int i = 0; i < Axis::Dim; i++) {
+                MultiIndex idx = *this;
+                idx.idx += stride[i];
+                if(idx.isValid()) result.emplace_back(idx);
+            }
+            return result;
+        }
     };
 
-    
+    struct GridCoord {
+        std::array<float, Axis::Dim> coord;
 
-    enum Direction {
-        Left,
-        Right,
-        Top,
-        Bottom,
-        Front,
-        Back,
-        NUM
+        GridCoord() {}
+        GridCoord(Eigen::VectorXf v) {
+            for(int i = 0; i < Axis::Dim; i++) {
+                coord.at(i) = v(i);
+            }    
+        }
+
+        GridCoord(MultiIndex idx) {
+            auto indices = idx.getIndices();
+            for(int i = 0; i < Axis::Dim; i++) {
+                coord.at(i) = float(indices.at(i)) - 0.5f;
+            }  
+        }
+
+        GridCoord(MultiIndex idx, Axis axis) {
+            auto indices = idx.getIndices();
+            for(int i = 0; i < Axis::Dim; i++) {
+                coord.at(i) = float(indices.at(i)) - (axis == i) ? 0 : 0.5f;
+            }  
+        }
+
+        operator Eigen::VectorXf()  {
+            Eigen::VectorXf v(Axis::Dim);
+            for(int i = 0; i < Axis::Dim; i++) {
+                v(i) = coord.at(i);
+            }
+            return v;
+        }
+
+        GridCoord shift() {
+            GridCoord result(*this);
+            for(int i = 0; i < Axis::Dim; i++) {
+                result.coord[i] -= 0.5f;
+            }
+            return result;
+        }
+
+        GridCoord shift(Axis axis) {
+            GridCoord result(*this);
+            for(int i = 0; i < Axis::Dim; i++) {
+                if(i == axis) continue;
+                result.coord[i] -= 0.5f;
+            }
+            return result;
+        }
+
+        float dist(const GridCoord& other) const {
+            float sum = 0.f;
+            for(int i = 0; i < Axis::Dim; i++) {
+                float dist = coord[i] - other.coord[i];
+                sum += dist * dist;
+            }
+            return std::sqrtf(sum);
+        }
+
+        GridCoord& operator=(const Eigen::Vector3f& v) {
+            for(int i = 0; i < Axis::Dim; i++) {
+                coord.at(i) = v(i);
+            } 
+            return *this;
+        }
     };
 
 }

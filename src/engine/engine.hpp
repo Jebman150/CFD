@@ -1,13 +1,15 @@
 #pragma once
 
 #include "grid.hpp"
-#include "pressureSolver.hpp"
+#include "solver.hpp"
+#include "linearOperator.hpp"
 
 namespace engine {
 
 class Engine {
     Grid grid;
-    PressureSolver pressureSolver;
+    std::unique_ptr<Solver> solver;
+    LaplacianOperatorCPU laplacian;
 
     float deltaT;
 

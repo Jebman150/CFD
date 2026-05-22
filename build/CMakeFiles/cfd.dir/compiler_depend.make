@@ -1604,8 +1604,12 @@ CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.o: /home/matthias/Projects/cpp/
   /home/matthias/Projects/cpp/CFD/eigen/Eigen/src/misc/Kernel.h \
   /home/matthias/Projects/cpp/CFD/eigen/Eigen/src/misc/RankRevealingBase.h \
   /home/matthias/Projects/cpp/CFD/src/engine/grid.hpp \
+  /home/matthias/Projects/cpp/CFD/src/engine/gridShape.hpp \
   /home/matthias/Projects/cpp/CFD/src/engine/navigation.hpp \
   /home/matthias/Projects/cpp/CFD/src/engine/pressureSolver.hpp \
+  /home/matthias/Projects/cpp/CFD/src/engine/query.hpp \
+  /home/matthias/Projects/cpp/CFD/src/engine/queryBase.hpp \
+  /home/matthias/Projects/cpp/CFD/src/engine/views.hpp \
   /usr/include/alloca.h \
   /usr/include/asm-generic/bitsperlong.h \
   /usr/include/asm-generic/errno-base.h \
@@ -3774,6 +3778,10 @@ CMakeFiles/cfd.dir/src/main.cpp.o:
 
 /usr/include/c++/16.1.1/bits/monostate.h:
 
+/home/matthias/Projects/cpp/CFD/src/engine/views.hpp:
+
+/home/matthias/Projects/cpp/CFD/src/engine/query.hpp:
+
 /home/matthias/Projects/cpp/CFD/src/engine/pressureSolver.cpp:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/xmmintrin.h:
@@ -3831,6 +3839,8 @@ CMakeFiles/cfd.dir/src/main.cpp.o:
 /usr/include/errno.h:
 
 /usr/include/ctype.h:
+
+/home/matthias/Projects/cpp/CFD/src/engine/gridShape.hpp:
 
 /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/opt_random.h:
 
@@ -4967,6 +4977,8 @@ CMakeFiles/cfd.dir/src/graphics/renderer.cpp.o:
 /usr/include/c++/16.1.1/bits/move.h:
 
 /usr/include/c++/16.1.1/bits/exception.h:
+
+/home/matthias/Projects/cpp/CFD/src/engine/queryBase.hpp:
 
 /home/matthias/Projects/cpp/CFD/eigen/Eigen/src/SparseCore/SparseMap.h:
 

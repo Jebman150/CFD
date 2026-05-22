@@ -25,8 +25,6 @@ void Engine::initSim() {
         gridSize,
         boundaryConditions
     );
-
-    pressureSolver.initialize(grid, {grid.getDx(), grid.getDy(), grid.getDz()});
 }
 
 /*
@@ -34,12 +32,12 @@ void Engine::initSim() {
 */
 void Engine::adjustTimestep() {
     float maxU = std::max(grid.getMaxVelocity(), 0.1f);
-    deltaT = cTarget * grid.getDx() / maxU;
+    deltaT = cTarget * grid.getDx(Axis::X) / maxU;
 }
 
 void Engine::checkCFDCondition() {
     float maxU = grid.getMaxVelocity();
-    float C = maxU * deltaT / grid.getDx();
+    float C = maxU * deltaT / grid.getDx(Axis::X);
     if(C < 0.1 || C > 1) {
         std::cout << "WARNING: CFD Condition " << C << std::endl;
     }
@@ -55,55 +53,52 @@ void Engine::applyBoundaryCondition() {
     });
 
     // Domain boundary flow
-    for(int dir = 0; dir < Direction::NUM; dir++) {
-        float value = boundaryConditions[dir];
-        grid.forEachFace(grid.getBoundaryPlane(static_cast<Direction>(dir)), [value](FaceView face){
+    for(int i = 0; i < Axis::Dim; i++) {
+        float value = boundaryConditions[i*2];
+        grid.forEachFace(grid.getBoundaryPlane(static_cast<Axis>(i), false), [value](FaceView face){
             face.value = value;
             if(std::abs(value) > 1e-8) face.type = Fluid_Fluid;
+        });
+        float value = boundaryConditions[i*2+1];
+        grid.forEachFace(grid.getBoundaryPlane(static_cast<Axis>(i), true), [value](FaceView face){
+            face.value = value;
+            if(std::abs(value) > 1e-8) face.type = Fluid_Fluid;
+            else face.type = Fluid_Solid;
         });
     }
 }
 
 void Engine::setSolidCells() {
-    Eigen::Vector3f center = {grid.getWidth()/2.f, grid.getHeight()/2.f, grid.getDepth()/2.f};
+    GridCoord center;
+    for(int i = 0; i < Axis::Dim; i++) {
+        center.coord[i] = grid.getSize(static_cast<Axis>(i));
+    }
     float radius = 4;
 
     grid.forEachCell([this](CellView cell) {
         cell.type = CellType::Solid;
     }, [&radius, &center](CellView cell) {
-        Eigen::Vector3f coord = cell.coord;
-        return (coord-center).norm() < radius;
+        return center.dist(cell.coord) < radius;
     });
 }
 
 void Engine::updateFaceTypes() {
-    grid.forEachFace([this](FaceView face) {
-        auto adjacentCellIndices = face.idx.getFaceCellIndices(face.axis);
-        CellType left = grid.getCellType(adjacentCellIndices[0]);
-        CellType right = grid.getCellType(adjacentCellIndices[1]);
-        if(left == CellType::Fluid) {
-            if(right == CellType::Fluid) {
-                face.type = Fluid_Fluid;
-            } else {
-                face.type = Fluid_Solid;
-            }
-        } else {
-            if(right == CellType::Fluid) {
-                face.type = Solid_Fluid;
-            } else {
-                face.type = Solid_Solid;
-            }
-        }
-    });
+    grid.updateFaceTypes();
 }
 
 void Engine::spawnSmoke() {
-    Eigen::Vector3f center = {grid.getWidth()/2.f, grid.getHeight()/2.f, grid.getDepth()/2.f};
+    GridCoord center;
+    for(int i = 0; i < Axis::Dim; i++) {
+        center.coord[i] = grid.getSize(static_cast<Axis>(i));
+    }
     int height = 4;
-    for(int k = 0; k < grid.getDepth(); k++) {
-        for(int j = center.y()-height; j < center.y()+height; j++) {
-            grid.setScalarField(ScalarFieldID::Smoke, {1, j, k}, 1.f);
-        }
+
+    for(MultiIndex idx(grid.getSize()); !idx.overflow(); idx++) {
+        GridCoord coord(idx);
+        if(!coord.coord[0] == 1) continue;
+        if(!(std::abs(coord.coord[1]-center.coord[1]) < height)) continue;
+
+        grid.setScalarField(ScalarFieldID::Smoke, idx, 1.f);
     }
 }
 
@@ -119,24 +114,24 @@ void Engine::advect() {
 }
 
 void Engine::advectVelocities() {
-    std::array<std::vector<float>, Axis::Dim> velocityBuffer = {
-        std::vector<float>((grid.getWidth()+1) * grid.getHeight() * grid.getDepth()),
-        std::vector<float>(grid.getWidth() * (grid.getHeight()+1) * grid.getDepth()),
-        std::vector<float>(grid.getWidth() * grid.getHeight() * (grid.getDepth()+1))
-    };
-
-    for(int ax = 0; ax < Axis::Dim; ax++) {
-        Axis axis = static_cast<Axis>(ax);
-        for(int i = 1; i < grid.getSize(axis); i++) {
-            Plane plane = {axis, i};
-            grid.forEachFace(plane, [this, &velocityBuffer, ax](FaceView face) {
-                Eigen::Vector3f currentVelocity = grid.interpolateVelocity(face.coord);
-                Eigen::Vector3f pos = face.coord;
-                GridCoord oldCoord = GridCoord(pos - currentVelocity * deltaT);
-                velocityBuffer[ax].at(grid.getVelocityIndex(face.axis, face.idx)) = grid.interpolateVelocity(oldCoord)[ax];
-            });
+    std::array<std::vector<float>, Axis::Dim> velocityBuffer;
+    for(int i = 0; i < Axis::Dim; i++) {
+        int size = 0;
+        auto dims = grid.getMACSize(static_cast<Axis>(i));
+        for(int i = 0 ; i < Axis::Dim; i++) {
+            size += dims[i];
         }
+        velocityBuffer.at(i) = std::vector<float>(size, 0);
     }
+
+    grid.forEachCell([&velocityBuffer, this] (FaceView& face) {
+        Eigen::VectorXf currentVelocity = grid.interpolateVelocity(face.coord);
+        Eigen::VectorXf pos = face.coord;
+        GridCoord oldCoord = GridCoord(pos - currentVelocity * deltaT);
+        velocityBuffer[face.axis].at(face.idx.get()) = grid.interpolateVelocity(oldCoord)[face.axis];
+    }, [this] (FaceView& face) {
+        return !face.isInPlane(grid.getBoundaryPlane(face.axis, false)) && !face.isInPlane(grid.getBoundaryPlane(face.axis, true));
+    });
 
     grid.overrideVelocities(velocityBuffer);
 }
@@ -146,14 +141,14 @@ void Engine::advectScalarFields() {
         auto& field = grid.getScalarField(static_cast<ScalarFieldID>(id));
         if(!field.advect) continue;
 
-        std::vector<float> buffer(grid.getWidth() * grid.getHeight() * grid.getDepth());
+        std::vector<float> buffer(grid.getC);
 
-        for(Indexer3D idxer(grid.getWidth(), grid.getHeight(), grid.getDepth()); !idxer.end(); idxer++) {
-            GridCoord coord = grid.coordFromCellIndex(idxer.get());
-            Eigen::Vector3f currentVelocity = grid.interpolateVelocity(coord);
-            Eigen::Vector3f pos = coord;
+        for(MultiIndex idx(grid.getSize()); !idx.overflow(); idx++) {
+            GridCoord coord(idx);
+            Eigen::VectorXf currentVelocity = grid.interpolateVelocity(coord);
+            Eigen::VectorXf pos = coord;
             GridCoord oldCoord = GridCoord(pos - currentVelocity * deltaT);
-            buffer.at(grid.cellIndex(idxer.get())) = grid.getScalarField(static_cast<ScalarFieldID>(id), oldCoord);
+            buffer.at(idx.get()) = grid.getScalarField(static_cast<ScalarFieldID>(id), oldCoord);
         }
 
         grid.overrideScalarField(static_cast<ScalarFieldID>(id), buffer);
@@ -166,7 +161,7 @@ void Engine::advectScalarFields() {
 */
 void Engine::project() {
     //Add artificial movement in grid
-    //Index3D artificialMovCoord = {std::round(grid.getWidth() / 2.0), std::round(grid.getHeight() / 2.0), 0};
+    //MultiIndex artificialMovCoord = {std::round(grid.getWidth() / 2.0), std::round(grid.getHeight() / 2.0), 0};
     //grid.setVelocityV(artificialMovCoord, 300 * sin(3 * currentT));
     //grid.setVelocityU(artificialMovCoord, 300 * cos(3 * currentT));
     //grid.forEachFace([](FaceView face) {
