@@ -1,32 +1,158 @@
 [
 {
   "directory": "/home/matthias/Projects/cpp/CFD/build",
-  "command": "/usr/bin/c++  -I/home/matthias/Projects/cpp/CFD/src -I/home/matthias/Projects/cpp/CFD/eigen -std=gnu++20 -o CMakeFiles/cfd.dir/src/main.cpp.o -c /home/matthias/Projects/cpp/CFD/src/main.cpp",
+  "command": "/usr/bin/c++ -DKOKKOS_DEPENDENCE -I/home/matthias/Projects/cpp/CFD/src -I/home/matthias/Projects/cpp/CFD/eigen -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/containers/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/containers/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/algorithms/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/algorithms/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/simd/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/simd/src -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include -std=gnu++20 -o CMakeFiles/cfd.dir/src/main.cpp.o -c /home/matthias/Projects/cpp/CFD/src/main.cpp",
   "file": "/home/matthias/Projects/cpp/CFD/src/main.cpp",
   "output": "CMakeFiles/cfd.dir/src/main.cpp.o"
 },
 {
   "directory": "/home/matthias/Projects/cpp/CFD/build",
-  "command": "/usr/bin/c++  -I/home/matthias/Projects/cpp/CFD/src -I/home/matthias/Projects/cpp/CFD/eigen -std=gnu++20 -o CMakeFiles/cfd.dir/src/graphics/renderer.cpp.o -c /home/matthias/Projects/cpp/CFD/src/graphics/renderer.cpp",
+  "command": "/usr/bin/c++ -DKOKKOS_DEPENDENCE -I/home/matthias/Projects/cpp/CFD/src -I/home/matthias/Projects/cpp/CFD/eigen -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/containers/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/containers/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/algorithms/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/algorithms/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/simd/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/simd/src -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include -std=gnu++20 -o CMakeFiles/cfd.dir/src/graphics/renderer.cpp.o -c /home/matthias/Projects/cpp/CFD/src/graphics/renderer.cpp",
   "file": "/home/matthias/Projects/cpp/CFD/src/graphics/renderer.cpp",
   "output": "CMakeFiles/cfd.dir/src/graphics/renderer.cpp.o"
 },
 {
   "directory": "/home/matthias/Projects/cpp/CFD/build",
-  "command": "/usr/bin/c++  -I/home/matthias/Projects/cpp/CFD/src -I/home/matthias/Projects/cpp/CFD/eigen -std=gnu++20 -o CMakeFiles/cfd.dir/src/engine/engine.cpp.o -c /home/matthias/Projects/cpp/CFD/src/engine/engine.cpp",
+  "command": "/usr/bin/c++ -DKOKKOS_DEPENDENCE -I/home/matthias/Projects/cpp/CFD/src -I/home/matthias/Projects/cpp/CFD/eigen -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/containers/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/containers/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/algorithms/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/algorithms/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/simd/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/simd/src -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include -std=gnu++20 -o CMakeFiles/cfd.dir/src/engine/engine.cpp.o -c /home/matthias/Projects/cpp/CFD/src/engine/engine.cpp",
   "file": "/home/matthias/Projects/cpp/CFD/src/engine/engine.cpp",
   "output": "CMakeFiles/cfd.dir/src/engine/engine.cpp.o"
 },
 {
   "directory": "/home/matthias/Projects/cpp/CFD/build",
-  "command": "/usr/bin/c++  -I/home/matthias/Projects/cpp/CFD/src -I/home/matthias/Projects/cpp/CFD/eigen -std=gnu++20 -o CMakeFiles/cfd.dir/src/engine/grid.cpp.o -c /home/matthias/Projects/cpp/CFD/src/engine/grid.cpp",
+  "command": "/usr/bin/c++ -DKOKKOS_DEPENDENCE -I/home/matthias/Projects/cpp/CFD/src -I/home/matthias/Projects/cpp/CFD/eigen -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/containers/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/containers/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/algorithms/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/algorithms/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/simd/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/simd/src -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include -std=gnu++20 -o CMakeFiles/cfd.dir/src/engine/grid.cpp.o -c /home/matthias/Projects/cpp/CFD/src/engine/grid.cpp",
   "file": "/home/matthias/Projects/cpp/CFD/src/engine/grid.cpp",
   "output": "CMakeFiles/cfd.dir/src/engine/grid.cpp.o"
 },
 {
   "directory": "/home/matthias/Projects/cpp/CFD/build",
-  "command": "/usr/bin/c++  -I/home/matthias/Projects/cpp/CFD/src -I/home/matthias/Projects/cpp/CFD/eigen -std=gnu++20 -o CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.o -c /home/matthias/Projects/cpp/CFD/src/engine/pressureSolver.cpp",
-  "file": "/home/matthias/Projects/cpp/CFD/src/engine/pressureSolver.cpp",
-  "output": "CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.o"
+  "command": "/usr/bin/c++ -DKOKKOS_DEPENDENCE -I/home/matthias/Projects/cpp/CFD/src -I/home/matthias/Projects/cpp/CFD/eigen -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/containers/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/containers/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/algorithms/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/algorithms/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/simd/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/simd/src -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include -std=gnu++20 -o CMakeFiles/cfd.dir/src/engine/solver.cpp.o -c /home/matthias/Projects/cpp/CFD/src/engine/solver.cpp",
+  "file": "/home/matthias/Projects/cpp/CFD/src/engine/solver.cpp",
+  "output": "CMakeFiles/cfd.dir/src/engine/solver.cpp.o"
+},
+{
+  "directory": "/home/matthias/Projects/cpp/CFD/build",
+  "command": "/usr/bin/c++ -DKOKKOS_DEPENDENCE -I/home/matthias/Projects/cpp/CFD/src -I/home/matthias/Projects/cpp/CFD/eigen -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/containers/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/containers/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/algorithms/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/algorithms/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/simd/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/simd/src -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include -std=gnu++20 -o CMakeFiles/cfd.dir/src/engine/linearOperator.cpp.o -c /home/matthias/Projects/cpp/CFD/src/engine/linearOperator.cpp",
+  "file": "/home/matthias/Projects/cpp/CFD/src/engine/linearOperator.cpp",
+  "output": "CMakeFiles/cfd.dir/src/engine/linearOperator.cpp.o"
+},
+{
+  "directory": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build",
+  "command": "/usr/bin/c++  -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/generated -std=gnu++20 -o CMakeFiles/impl_git_version.dir/generated/Kokkos_Version_Info.cpp.o -c /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/generated/Kokkos_Version_Info.cpp",
+  "file": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/generated/Kokkos_Version_Info.cpp",
+  "output": "_deps/kokkos-build/CMakeFiles/impl_git_version.dir/generated/Kokkos_Version_Info.cpp.o"
+},
+{
+  "directory": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src",
+  "command": "/usr/bin/c++ -DKOKKOS_DEPENDENCE -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include -x c++ -std=gnu++20 -o CMakeFiles/kokkoscore.dir/impl/Kokkos_Abort.cpp.o -c /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_Abort.cpp",
+  "file": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_Abort.cpp",
+  "output": "_deps/kokkos-build/core/src/CMakeFiles/kokkoscore.dir/impl/Kokkos_Abort.cpp.o"
+},
+{
+  "directory": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src",
+  "command": "/usr/bin/c++ -DKOKKOS_DEPENDENCE -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include -x c++ -std=gnu++20 -o CMakeFiles/kokkoscore.dir/impl/Kokkos_CPUDiscovery.cpp.o -c /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_CPUDiscovery.cpp",
+  "file": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_CPUDiscovery.cpp",
+  "output": "_deps/kokkos-build/core/src/CMakeFiles/kokkoscore.dir/impl/Kokkos_CPUDiscovery.cpp.o"
+},
+{
+  "directory": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src",
+  "command": "/usr/bin/c++ -DKOKKOS_DEPENDENCE -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include -x c++ -std=gnu++20 -o CMakeFiles/kokkoscore.dir/impl/Kokkos_Command_Line_Parsing.cpp.o -c /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_Command_Line_Parsing.cpp",
+  "file": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_Command_Line_Parsing.cpp",
+  "output": "_deps/kokkos-build/core/src/CMakeFiles/kokkoscore.dir/impl/Kokkos_Command_Line_Parsing.cpp.o"
+},
+{
+  "directory": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src",
+  "command": "/usr/bin/c++ -DKOKKOS_DEPENDENCE -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include -x c++ -std=gnu++20 -o CMakeFiles/kokkoscore.dir/impl/Kokkos_Core.cpp.o -c /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_Core.cpp",
+  "file": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_Core.cpp",
+  "output": "_deps/kokkos-build/core/src/CMakeFiles/kokkoscore.dir/impl/Kokkos_Core.cpp.o"
+},
+{
+  "directory": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src",
+  "command": "/usr/bin/c++ -DKOKKOS_DEPENDENCE -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include -x c++ -std=gnu++20 -o CMakeFiles/kokkoscore.dir/impl/Kokkos_Error.cpp.o -c /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_Error.cpp",
+  "file": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_Error.cpp",
+  "output": "_deps/kokkos-build/core/src/CMakeFiles/kokkoscore.dir/impl/Kokkos_Error.cpp.o"
+},
+{
+  "directory": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src",
+  "command": "/usr/bin/c++ -DKOKKOS_DEPENDENCE -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include -x c++ -std=gnu++20 -o CMakeFiles/kokkoscore.dir/impl/Kokkos_ExecPolicy.cpp.o -c /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_ExecPolicy.cpp",
+  "file": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_ExecPolicy.cpp",
+  "output": "_deps/kokkos-build/core/src/CMakeFiles/kokkoscore.dir/impl/Kokkos_ExecPolicy.cpp.o"
+},
+{
+  "directory": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src",
+  "command": "/usr/bin/c++ -DKOKKOS_DEPENDENCE -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include -x c++ -std=gnu++20 -o CMakeFiles/kokkoscore.dir/impl/Kokkos_HostBarrier.cpp.o -c /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_HostBarrier.cpp",
+  "file": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_HostBarrier.cpp",
+  "output": "_deps/kokkos-build/core/src/CMakeFiles/kokkoscore.dir/impl/Kokkos_HostBarrier.cpp.o"
+},
+{
+  "directory": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src",
+  "command": "/usr/bin/c++ -DKOKKOS_DEPENDENCE -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include -x c++ -std=gnu++20 -o CMakeFiles/kokkoscore.dir/impl/Kokkos_HostSpace.cpp.o -c /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_HostSpace.cpp",
+  "file": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_HostSpace.cpp",
+  "output": "_deps/kokkos-build/core/src/CMakeFiles/kokkoscore.dir/impl/Kokkos_HostSpace.cpp.o"
+},
+{
+  "directory": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src",
+  "command": "/usr/bin/c++ -DKOKKOS_DEPENDENCE -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include -x c++ -std=gnu++20 -o CMakeFiles/kokkoscore.dir/impl/Kokkos_HostSpace_deepcopy.cpp.o -c /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_HostSpace_deepcopy.cpp",
+  "file": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_HostSpace_deepcopy.cpp",
+  "output": "_deps/kokkos-build/core/src/CMakeFiles/kokkoscore.dir/impl/Kokkos_HostSpace_deepcopy.cpp.o"
+},
+{
+  "directory": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src",
+  "command": "/usr/bin/c++ -DKOKKOS_DEPENDENCE -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include -x c++ -std=gnu++20 -o CMakeFiles/kokkoscore.dir/impl/Kokkos_HostThreadTeam.cpp.o -c /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_HostThreadTeam.cpp",
+  "file": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_HostThreadTeam.cpp",
+  "output": "_deps/kokkos-build/core/src/CMakeFiles/kokkoscore.dir/impl/Kokkos_HostThreadTeam.cpp.o"
+},
+{
+  "directory": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src",
+  "command": "/usr/bin/c++ -DKOKKOS_DEPENDENCE -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include -x c++ -std=gnu++20 -o CMakeFiles/kokkoscore.dir/impl/Kokkos_MemoryPool.cpp.o -c /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_MemoryPool.cpp",
+  "file": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_MemoryPool.cpp",
+  "output": "_deps/kokkos-build/core/src/CMakeFiles/kokkoscore.dir/impl/Kokkos_MemoryPool.cpp.o"
+},
+{
+  "directory": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src",
+  "command": "/usr/bin/c++ -DKOKKOS_DEPENDENCE -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include -x c++ -std=gnu++20 -o CMakeFiles/kokkoscore.dir/impl/Kokkos_Profiling.cpp.o -c /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_Profiling.cpp",
+  "file": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_Profiling.cpp",
+  "output": "_deps/kokkos-build/core/src/CMakeFiles/kokkoscore.dir/impl/Kokkos_Profiling.cpp.o"
+},
+{
+  "directory": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src",
+  "command": "/usr/bin/c++ -DKOKKOS_DEPENDENCE -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include -x c++ -std=gnu++20 -o CMakeFiles/kokkoscore.dir/impl/Kokkos_SharedAlloc.cpp.o -c /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_SharedAlloc.cpp",
+  "file": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_SharedAlloc.cpp",
+  "output": "_deps/kokkos-build/core/src/CMakeFiles/kokkoscore.dir/impl/Kokkos_SharedAlloc.cpp.o"
+},
+{
+  "directory": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src",
+  "command": "/usr/bin/c++ -DKOKKOS_DEPENDENCE -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include -x c++ -std=gnu++20 -o CMakeFiles/kokkoscore.dir/impl/Kokkos_Stacktrace.cpp.o -c /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_Stacktrace.cpp",
+  "file": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_Stacktrace.cpp",
+  "output": "_deps/kokkos-build/core/src/CMakeFiles/kokkoscore.dir/impl/Kokkos_Stacktrace.cpp.o"
+},
+{
+  "directory": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src",
+  "command": "/usr/bin/c++ -DKOKKOS_DEPENDENCE -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include -x c++ -std=gnu++20 -o CMakeFiles/kokkoscore.dir/impl/Kokkos_hwloc.cpp.o -c /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_hwloc.cpp",
+  "file": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_hwloc.cpp",
+  "output": "_deps/kokkos-build/core/src/CMakeFiles/kokkoscore.dir/impl/Kokkos_hwloc.cpp.o"
+},
+{
+  "directory": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src",
+  "command": "/usr/bin/c++ -DKOKKOS_DEPENDENCE -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include -x c++ -std=gnu++20 -o CMakeFiles/kokkoscore.dir/Serial/Kokkos_Serial.cpp.o -c /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Serial/Kokkos_Serial.cpp",
+  "file": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Serial/Kokkos_Serial.cpp",
+  "output": "_deps/kokkos-build/core/src/CMakeFiles/kokkoscore.dir/Serial/Kokkos_Serial.cpp.o"
+},
+{
+  "directory": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/containers/src",
+  "command": "/usr/bin/c++ -DKOKKOS_DEPENDENCE -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/containers/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/containers/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include -x c++ -std=gnu++20 -o CMakeFiles/kokkoscontainers.dir/impl/Kokkos_UnorderedMap_impl.cpp.o -c /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/containers/src/impl/Kokkos_UnorderedMap_impl.cpp",
+  "file": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/containers/src/impl/Kokkos_UnorderedMap_impl.cpp",
+  "output": "_deps/kokkos-build/containers/src/CMakeFiles/kokkoscontainers.dir/impl/Kokkos_UnorderedMap_impl.cpp.o"
+},
+{
+  "directory": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/algorithms/src",
+  "command": "/usr/bin/c++ -DKOKKOS_DEPENDENCE -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/algorithms/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/algorithms/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include -x c++ -std=gnu++20 -o CMakeFiles/kokkosalgorithms.dir/KokkosAlgorithms_dummy.cpp.o -c /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/algorithms/src/KokkosAlgorithms_dummy.cpp",
+  "file": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/algorithms/src/KokkosAlgorithms_dummy.cpp",
+  "output": "_deps/kokkos-build/algorithms/src/CMakeFiles/kokkosalgorithms.dir/KokkosAlgorithms_dummy.cpp.o"
+},
+{
+  "directory": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/simd/src",
+  "command": "/usr/bin/c++ -DKOKKOS_DEPENDENCE -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/simd/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/simd/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src -I/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include -isystem /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include -x c++ -std=gnu++20 -o CMakeFiles/kokkossimd.dir/Kokkos_SIMD_dummy.cpp.o -c /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/simd/src/Kokkos_SIMD_dummy.cpp",
+  "file": "/home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/simd/src/Kokkos_SIMD_dummy.cpp",
+  "output": "_deps/kokkos-build/simd/src/CMakeFiles/kokkossimd.dir/Kokkos_SIMD_dummy.cpp.o"
 }
 ]

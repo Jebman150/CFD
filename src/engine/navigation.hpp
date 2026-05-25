@@ -8,79 +8,141 @@ namespace engine {
 
 namespace navigation {
     enum Axis {
-        X, Y, Z, Dim
+        X, Y, Dim, Z
     };
 
-    struct MultiIndex {
+    struct IndexContext {
+        std::vector<int> size;
+        std::vector<int> stride;
+        int nMax;
+
+        IndexContext() {}
+        IndexContext(std::vector<int> _size) : size(_size) {
+            computeStride();
+        }
     private:
-        
         void computeStride() {
+            stride = std::vector<int>(size.size());
             stride[0] = 1;
-            for(int i = 1; i < Axis::Dim; i++) {
+            for(int i = 1; i < stride.size(); i++) {
                 stride[i] = stride[i-1] * size[i-1];
             }
-            nMax = stride[Axis::Dim-1] * size[Axis::Dim-1];
+            nMax = stride[stride.size()-1] * size[stride.size()-1];
         }
-    protected:
-        using IndexArray = std::array<int, Axis::Dim>;
-        int idx = 0;
-        IndexArray size;
-        IndexArray stride;
-        int nMax = 0;
+    };
 
+    struct MultiIndex { 
+    protected:
+        using IndexArray = std::vector<int>;
+        IndexArray indices;
+        const IndexContext* context;
     public:
         MultiIndex() {}
-        MultiIndex(IndexArray _size) : size(_size) {
-            computeStride();
+        MultiIndex(const IndexContext* _context) : context(_context) {
+            if(!context) {
+                std::cerr << "ERROR: Using multiindex without context!" << std::endl;
+                return;
+            }
+            indices = IndexArray(context->size.size(), 0);
         }
-        MultiIndex(IndexArray _size, IndexArray _initializer) : size(_size) {
-            computeStride();
-            for(int i = 0; i < Axis::Dim; i++) {
-                idx += _initializer[i] * stride[i];
+
+        MultiIndex(int _initializer, const IndexContext* _context) : MultiIndex(_context) {
+            for(int i = 0; i < context->size.size(); i++) {
+                indices[i] = (_initializer / context->stride[i]) % context->size[i];
+            }
+        }
+        MultiIndex(IndexArray _initializer, const IndexContext* _context) : MultiIndex(_context) {
+            for(int i = 0; i < context->size.size(); i++) {
+                indices[i] = _initializer[i];
             }
         }
 
         MultiIndex& operator++(int) {
-            idx++;
+            for(int i = 0; i < context->size.size(); i++) {
+                indices[i]++;
+                if(indices[i] < context->size[i]) break;
+                if(i != context->size.size()-1) indices[i] = 0;
+            }
             return *this;
         }
 
         MultiIndex& operator--(int) {
-            idx--;
+            for(int i = 0; i < context->size.size(); i++) {
+                indices[i]--;
+                if(indices[i] >= 0) break;
+                if(i != context->size.size()-1) indices[i] = context->size[i]-1;
+            }
             return *this;
         }
 
-        MultiIndex& operator+=(int i) {
-            idx += i;
+        MultiIndex& operator+=(int n) {
+            n = std::abs(n);
+            for(int i = 0; i < context->size.size(); i++) {
+                indices[i] += n;
+                if(indices[i] < context->size[i]) break;
+                int overflow = 0;
+                while(indices[i] >= context->size[i]) {
+                    indices[i] -= context->size[i];
+                    overflow++;
+                }
+                n = overflow;
+            }
             return *this;
         }
 
-        MultiIndex& operator-=(int i) {
-            idx -= i;
+        MultiIndex& operator-=(int n) {
+            n = std::abs(n);
+            for(int i = 0; i < context->size.size(); i++) {
+                indices[i] -= n;
+                if(indices[i] >= 0) break;
+                int underflow = 0;
+                while(indices[i] < 0) {
+                    indices[i] += context->size[i];
+                    underflow++;
+                }
+                n = underflow;
+            }
             return *this;
         }
 
         void advance(Axis axis, int n) {
-            idx += stride[axis] * n;
+            indices[axis] += n;
         }
 
         MultiIndex getSucceeding(Axis axis) {
             MultiIndex result = *this;
-            result.advance(axis, 1);
+            result.indices[axis]++;
+            if(result.isValid()) return result;
+            return *this;
+        }
+
+        MultiIndex getPreceeding(Axis axis) {
+            MultiIndex result = *this;
+            result.indices[axis]--;
             if(result.isValid()) return result;
             return *this;
         }
 
         int get() const {
+            int idx = 0;
+            for(int i = 0; i < context->size.size(); i++) {
+                idx += indices[i] * context->stride[i];
+            }
             return idx;
         }
 
         bool overflow() const {
-            return idx >= nMax;
+            for(int i = 0; i < context->size.size(); i++) {
+                if(indices[i] >= context->size[i]) return true;
+            }
+            return false;
         }
 
         bool underflow() const {
-            return idx < 0;
+            for(int i = 0; i < context->size.size(); i++) {
+                if(indices[i] < 0) return true;
+            }
+            return false;
         }
 
         bool isValid() const {
@@ -88,31 +150,44 @@ namespace navigation {
         }
 
         IndexArray getIndices() const {
-            IndexArray result;
-            for(int i = 0; i < Axis::Dim; i++) {
-                result[i] = (idx / stride[i]) % size[i];
-            }
-            return result;
+            return indices;
         }
 
-        std::vector<MultiIndex> getPreceding() const {
+        std::vector<MultiIndex> getPreceeding() const {
             std::vector<MultiIndex> result;
-            for(int i = 0; i < Axis::Dim; i++) {
-                MultiIndex idx = *this;
-                idx.idx -= stride[i];
-                if(idx.isValid()) result.emplace_back(idx);
+            for(int i = 0; i < context->size.size(); i++) {
+                auto ind = getIndices();
+                if(--ind[i] >= 0) result.emplace_back(MultiIndex(ind, context));
             }
             return result;
         }
 
         std::vector<MultiIndex> getSucceeding() const {
             std::vector<MultiIndex> result;
-            for(int i = 0; i < Axis::Dim; i++) {
-                MultiIndex idx = *this;
-                idx.idx += stride[i];
-                if(idx.isValid()) result.emplace_back(idx);
+            for(int i = 0; i < context->size.size(); i++) {
+                auto ind = getIndices();
+                if(++ind[i] < context->size[i]) result.emplace_back(MultiIndex(ind, context));
             }
             return result;
+        }
+
+        bool checkContext(const IndexContext* _other) const {
+            if(context->nMax != _other->nMax) return false;
+            for(int i = 0; i < context->size.size(); i++) {
+                if(context->stride[i] != _other->stride[i]) return false;
+                if(context->size[i] != _other->size[i]) return false;
+            }
+            return true;
+        }
+
+        void transformToContext(const IndexContext* _context) {
+            auto indices = getIndices();
+            *this = MultiIndex(indices, _context);
+        }
+
+        MultiIndex transformedToContext(const IndexContext* _context) const {
+            auto indices = getIndices();
+            return MultiIndex(indices, _context);
         }
     };
 
@@ -129,14 +204,14 @@ namespace navigation {
         GridCoord(MultiIndex idx) {
             auto indices = idx.getIndices();
             for(int i = 0; i < Axis::Dim; i++) {
-                coord.at(i) = float(indices.at(i)) - 0.5f;
+                coord.at(i) = float(indices.at(i)) + 0.5f;
             }  
         }
 
         GridCoord(MultiIndex idx, Axis axis) {
             auto indices = idx.getIndices();
             for(int i = 0; i < Axis::Dim; i++) {
-                coord.at(i) = float(indices.at(i)) - (axis == i) ? 0 : 0.5f;
+                coord.at(i) = float(indices.at(i)) + ((axis == i) ? 0 : 0.5f);
             }  
         }
 

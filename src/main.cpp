@@ -1,4 +1,5 @@
 #include "engine/engine.hpp"
+#include "engine/navigation.hpp"
 #include "graphics/renderer.hpp"
 #include "engine/tracer.hpp"
 
@@ -13,9 +14,16 @@ int main() {
     engine::Engine engine;
     renderer::Renderer renderer;
 
+    engine::navigation::IndexContext testContext({5, 5});
+    for(engine::navigation::MultiIndex testIdx(&testContext); !testIdx.overflow(); testIdx++) {
+        std::cout << "Index (" << testIdx.get() << "):"
+            << " indices: " << testIdx.getIndices()[0] << ", " << testIdx.getIndices()[1] << std::endl;
+    }
+
     engine.initSim();
     renderer.initialize();
     renderer.setVisMode(renderer::VisMode::Smoke);
+    renderer.setVecMode(renderer::VectorFieldMode::OFF);
     engine.setSolidCells();
     engine.updateFaceTypes();
 

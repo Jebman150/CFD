@@ -21,4 +21,16 @@ public:
     Eigen::VectorXf solve(LinearOperator* A, const Eigen::VectorXf& d) override;
 };
 
+class RBGSSolver : public Solver {
+
+public:
+    Eigen::VectorXf solve(LinearOperator* A, const Eigen::VectorXf& d) override;
+};
+
+class JacobiSolver : public Solver {
+
+public:
+    Eigen::VectorXf solve(LinearOperator* A, const Eigen::VectorXf& d) override;
+};
+
 } // namespace engine

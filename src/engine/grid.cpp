@@ -1,8 +1,9 @@
 #include "grid.hpp"
 
 #include <cmath>
-#include <iostream>
 #include <algorithm>
+#include <vector>
+#include <cmath>
 
 namespace engine {
 
@@ -13,29 +14,26 @@ namespace engine {
         3D-Vector for width, height and depth of the discretization grid
     
 */
-void Grid::initialize(std::array<int, Axis::Dim> _n, std::array<float, 6> _boundaryCondition) {
+void Grid::initialize(std::vector<int> _n, std::array<float, 6> _boundaryCondition) {
     n = _n;
-    for(int i = 0; i < Axis::Dim; i++) {
+    d = std::vector<float>(n.size());
+    totalCellCount = 1;
+    for(int i = 0; i < n.size(); i++) {
         totalCellCount *= n.at(i);
         d.at(i) = 0.3;
     }
 
-    cellType = std::vector<CellType>(totalCellCount, CellType::Fluid);
+    cellType = Field<CellType>(getSize(), CellType::Fluid);
 
-    for(int i = 0; i < Axis::Dim; i++) {
-        velocities[i] = std::vector<float>(getMACCellCount(static_cast<Axis>(i)), 0);
-        faceTypes[i] = std::vector<FaceType>(getMACCellCount(static_cast<Axis>(i)), FaceType::Fluid_Fluid);
+    for(int i = 0; i < n.size(); i++) {
+        velocities[i] = Field<float>(getMACSize(static_cast<Axis>(i)), 0);
+        faceTypes[i] = Field<FaceType>(getMACSize(static_cast<Axis>(i)), FaceType::Fluid_Fluid);
     }
     
     for(auto& scalarField : scalarFields) {
-        scalarField = {
-            std::vector<float>(totalCellCount, 0),
-            false
-        };
+        scalarField = Field<float>(getSize(), 0);
     }
     scalarFields[ScalarFieldID::Smoke].advect = true;
-    // dy = 1.0/float(ny);
-    // dz = 1.0/float(nz);
 }
 
 float lerp(float x, float y, float t) {
@@ -68,8 +66,8 @@ float nLerp(
     Returns the velocity of an arbitrary position in the volume.
 */
 Eigen::VectorXf Grid::interpolateVelocity(GridCoord position) const {
-    Eigen::VectorXf result(Axis::Dim);
-    for(int i = 0; i < Axis::Dim; i++) {
+    Eigen::VectorXf result(n.size());
+    for(int i = 0; i < n.size(); i++) {
         result(i) = getVelocity(static_cast<Axis>(i), position);
     }
     return result;
@@ -77,34 +75,42 @@ Eigen::VectorXf Grid::interpolateVelocity(GridCoord position) const {
 
 float Grid::getExactVelocity(Axis axis, MultiIndex idx) const {
     if(!idx.isValid()) return 0;
-    return velocities[axis].at(idx.get());
+    return velocities[axis].at(idx);
 }
 
 float Grid::getExactScalar(ScalarFieldID type, MultiIndex idx) const {
     if(!idx.isValid()) return 0;
-    return scalarFields[type].data.at(idx.get());
+    return scalarFields[type].at(idx);
 }
 
 float Grid::getVelocity(Axis axis, GridCoord coord) const {
+    //std::cout << "Sampling velocity at " << coord.coord[0] << ", " << coord.coord[1] << std::endl;
+    //std::cout << "In direction " << axis << std::endl;
     GridCoord shiftedCoord = coord.shift(axis);
-    MultiIndex idx(getMACSize(axis));
-    std::array<int, Axis::Dim> flooredPos;
-    std::vector<float> localCoord;
-    for(int i = 0; i < Axis::Dim; i++) {
-        flooredPos.at(i) = std::floorf(coord.coord[i]);
-        idx.advance(static_cast<Axis>(i), flooredPos.at(i));
-        localCoord.emplace_back(shiftedCoord.coord[i] - float(localCoord[i]));
+    //std::cout << " | Shifted to " << shiftedCoord.coord[0] << ", " << shiftedCoord.coord[1] << std::endl;
+    std::vector<int> flooredPos = std::vector<int>(n.size());
+    std::vector<float> localCoord = std::vector<float>(n.size());
+    for(int i = 0; i < n.size(); i++) {
+        flooredPos.at(i) = std::floorf(shiftedCoord.coord[i]);
+        localCoord.at(i) = shiftedCoord.coord[i] - float(flooredPos[i]);
     }
+    //std::cout << " | Floored to " << flooredPos[0] << ", " << flooredPos[1] << std::endl;
+    //std::cout << " | Local coord " << localCoord[0] << ", " << localCoord[1] << std::endl;
 
     std::vector<float> samplePoints;
-    samplePoints.reserve(1 << Axis::Dim);
-    for (int mask = 0; mask < (1 << Axis::Dim); mask++) {
-        MultiIndex target = idx;
-        for (int axis = 0; axis < Axis::Dim; axis++) {
-            if (mask & (1 << axis)) {
-                target.advance(static_cast<Axis>(axis), 1);
+    samplePoints.reserve(1 << n.size());
+    for (int mask = 0; mask < (1 << n.size()); mask++) {
+        std::vector<int> indices = flooredPos;
+        for (int i = 0; i < n.size(); i++) {
+            if (mask & (1 << i)) {
+                indices[i]++;
             }
+            indices[i] = std::clamp(indices[i], 0, getMACSize(axis)[i]-1);
         }
+
+        //std::cout << " | Adding sample at " << indices[0] << ", " << indices[1] << std::endl;
+        MultiIndex target(indices, velocities[axis].getContext());
+        //std::cout << " | Value: " << getExactVelocity(axis, target) << std::endl;
         samplePoints.emplace_back(
             getExactVelocity(axis, target)
         );
@@ -113,14 +119,14 @@ float Grid::getVelocity(Axis axis, GridCoord coord) const {
     return nLerp(
         samplePoints,
         localCoord,
-        Axis::Dim
+        n.size()
     );
 }
 
 float Grid::getMaxVelocity() const {
     float max = 0;
-    for(int i = 0; i < Axis::Dim; i++) {
-        auto uit = std::max_element(velocities[i].begin(), velocities[i].end(), [](int a, int b) {
+    for(int i = 0; i < n.size(); i++) {
+        auto uit = std::max_element(velocities[i].getData().begin(), velocities[i].getData().end(), [](int a, int b) {
             return std::abs(a) < std::abs(b);
         });
         if(max < std::abs(*uit)) max = std::abs(*uit);
@@ -129,47 +135,61 @@ float Grid::getMaxVelocity() const {
 }
 
 float Grid::getScalarField(ScalarFieldID type, GridCoord coord) const {
+    //std::cout << "Sampling scalar at " << coord.coord[0] << ", " << coord.coord[1] << std::endl;
     GridCoord shiftedCoord = coord.shift();
-    MultiIndex idx(getSize());
-    std::array<int, Axis::Dim> flooredPos;
-    std::vector<float> localCoord;
-    for(int i = 0; i < Axis::Dim; i++) {
-        flooredPos.at(i) = std::floorf(coord.coord[i]);
-        idx.advance(static_cast<Axis>(i), flooredPos.at(i));
-        localCoord.emplace_back(shiftedCoord.coord[i] - float(localCoord[i]));
+    //std::cout << " | Shifted to " << shiftedCoord.coord[0] << ", " << shiftedCoord.coord[1] << std::endl;
+    std::vector<int> flooredPos = std::vector<int>(n.size());
+    std::vector<float> localCoord = std::vector<float>(n.size());
+    for(int i = 0; i < n.size(); i++) {
+        flooredPos.at(i) = std::floorf(shiftedCoord.coord[i]);
+        localCoord.at(i) = shiftedCoord.coord[i] - float(flooredPos[i]);
     }
+    //std::cout << " | Floored to " << flooredPos[0] << ", " << flooredPos[1] << std::endl;
+    //std::cout << " | Local coord " << localCoord[0] << ", " << localCoord[1] << std::endl;
 
     std::vector<float> samplePoints;
-    samplePoints.reserve(1 << Axis::Dim);
-    for (int mask = 0; mask < (1 << Axis::Dim); mask++) {
-        MultiIndex target = idx;
-        for (int axis = 0; axis < Axis::Dim; axis++) {
-            if (mask & (1 << axis)) {
-                target.advance(static_cast<Axis>(axis), 1);
+    samplePoints.reserve(1 << n.size());
+    for (int mask = 0; mask < (1 << n.size()); mask++) {
+        std::vector<int> indices = flooredPos;
+        for (int i = 0; i < n.size(); i++) {
+            if (mask & (1 << i)) {
+                indices[i]++;
             }
+            indices[i] = std::clamp(indices[i], 0, n.at(i)-1);
         }
+
+        //std::cout << " | Adding sample at " << indices[0] << ", " << indices[1] << std::endl;
         samplePoints.emplace_back(
-            getExactScalar(type, target)
+            getExactScalar(type, MultiIndex(indices, scalarFields[type].getContext()))
         );
+        //std::cout << " | Value: " << getExactScalar(type, MultiIndex(indices, scalarFields[type].getContext())) << std::endl;
     }
 
     return nLerp(
         samplePoints,
         localCoord,
-        Axis::Dim
+        n.size()
     );
 }
 
 float Grid::getDivergence(MultiIndex idx) const {
     float div = 0;
-    for(int i = 0; i < Axis::Dim; i++) {
-        div += (getExactVelocity(static_cast<Axis>(i), idx.getSucceeding(static_cast<Axis>(i))) - getExactVelocity(static_cast<Axis>(i), idx)) / d.at(i);
+    for(int i = 0; i < n.size(); i++) {
+        auto ind = idx.getIndices();
+        ind[i]++;
+        MultiIndex succ(ind, velocities[i].getContext());
+        MultiIndex prec(idx.getIndices(), velocities[i].getContext());
+        div += (getExactVelocity(static_cast<Axis>(i), succ) - getExactVelocity(static_cast<Axis>(i), prec)) / d.at(i);
     }
     return div;
 }
 
 float Grid::getScalarGradient(ScalarFieldID type, MultiIndex idx, Axis axis) const {
-    return (getExactScalar(type, idx.getSucceeding(axis)) - getExactScalar(type, idx)) / d.at(axis);
+    //std::cout << "Retreiving scalar gradient(" << idx.getIndices()[0] << ", " << idx.getIndices()[1] << ")" << std::endl;
+    //std::cout << " | Left (" << idx.getPreceeding(axis).getIndices()[0] << ", " << idx.getPreceeding(axis).getIndices()[1] << ")" << std::endl;
+    //std::cout << " | Right (" << idx.getIndices()[0] << ", " << idx.getIndices()[1] << ")" << std::endl;
+    MultiIndex cellIndex(idx.getIndices(), cellType.getContext());
+    return (getExactScalar(type, cellIndex) - getExactScalar(type, cellIndex.getPreceeding(axis))) / d.at(axis);
 }
 
 /*float Grid::getScalarGradient(ScalarFieldID type, GridCoord coord, Axis axis) const {

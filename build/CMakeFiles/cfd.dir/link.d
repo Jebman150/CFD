@@ -6,10 +6,16 @@ cfd: \
   CMakeFiles/cfd.dir/src/graphics/renderer.cpp.o \
   CMakeFiles/cfd.dir/src/engine/engine.cpp.o \
   CMakeFiles/cfd.dir/src/engine/grid.cpp.o \
-  CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.o \
+  CMakeFiles/cfd.dir/src/engine/solver.cpp.o \
+  CMakeFiles/cfd.dir/src/engine/linearOperator.cpp.o \
   /usr/lib/libsfml-graphics.so.3.1.0 \
   /usr/lib/libsfml-window.so.3.1.0 \
   /usr/lib/libsfml-system.so.3.1.0 \
+  _deps/kokkos-build/containers/src/libkokkoscontainers.a \
+  _deps/kokkos-build/algorithms/src/libkokkosalgorithms.a \
+  _deps/kokkos-build/simd/src/libkokkossimd.a \
+  _deps/kokkos-build/core/src/libkokkoscore.a \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libdl.a \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libstdc++.so \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libm.so \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libm.so \
@@ -92,13 +98,25 @@ CMakeFiles/cfd.dir/src/engine/engine.cpp.o:
 
 CMakeFiles/cfd.dir/src/engine/grid.cpp.o:
 
-CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.o:
+CMakeFiles/cfd.dir/src/engine/solver.cpp.o:
+
+CMakeFiles/cfd.dir/src/engine/linearOperator.cpp.o:
 
 /usr/lib/libsfml-graphics.so.3.1.0:
 
 /usr/lib/libsfml-window.so.3.1.0:
 
 /usr/lib/libsfml-system.so.3.1.0:
+
+_deps/kokkos-build/containers/src/libkokkoscontainers.a:
+
+_deps/kokkos-build/algorithms/src/libkokkosalgorithms.a:
+
+_deps/kokkos-build/simd/src/libkokkossimd.a:
+
+_deps/kokkos-build/core/src/libkokkoscore.a:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libdl.a:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libstdc++.so:
 

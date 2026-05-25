@@ -128,19 +128,33 @@ CMakeFiles/cfd.dir/src/engine/grid.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/cfd.dir/src/engine/grid.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/matthias/Projects/cpp/CFD/src/engine/grid.cpp -o CMakeFiles/cfd.dir/src/engine/grid.cpp.s
 
-CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.o: CMakeFiles/cfd.dir/flags.make
-CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.o: /home/matthias/Projects/cpp/CFD/src/engine/pressureSolver.cpp
-CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.o: CMakeFiles/cfd.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/matthias/Projects/cpp/CFD/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.o -MF CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.o.d -o CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.o -c /home/matthias/Projects/cpp/CFD/src/engine/pressureSolver.cpp
+CMakeFiles/cfd.dir/src/engine/solver.cpp.o: CMakeFiles/cfd.dir/flags.make
+CMakeFiles/cfd.dir/src/engine/solver.cpp.o: /home/matthias/Projects/cpp/CFD/src/engine/solver.cpp
+CMakeFiles/cfd.dir/src/engine/solver.cpp.o: CMakeFiles/cfd.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/matthias/Projects/cpp/CFD/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/cfd.dir/src/engine/solver.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/cfd.dir/src/engine/solver.cpp.o -MF CMakeFiles/cfd.dir/src/engine/solver.cpp.o.d -o CMakeFiles/cfd.dir/src/engine/solver.cpp.o -c /home/matthias/Projects/cpp/CFD/src/engine/solver.cpp
 
-CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/matthias/Projects/cpp/CFD/src/engine/pressureSolver.cpp > CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.i
+CMakeFiles/cfd.dir/src/engine/solver.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/cfd.dir/src/engine/solver.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/matthias/Projects/cpp/CFD/src/engine/solver.cpp > CMakeFiles/cfd.dir/src/engine/solver.cpp.i
 
-CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/matthias/Projects/cpp/CFD/src/engine/pressureSolver.cpp -o CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.s
+CMakeFiles/cfd.dir/src/engine/solver.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/cfd.dir/src/engine/solver.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/matthias/Projects/cpp/CFD/src/engine/solver.cpp -o CMakeFiles/cfd.dir/src/engine/solver.cpp.s
+
+CMakeFiles/cfd.dir/src/engine/linearOperator.cpp.o: CMakeFiles/cfd.dir/flags.make
+CMakeFiles/cfd.dir/src/engine/linearOperator.cpp.o: /home/matthias/Projects/cpp/CFD/src/engine/linearOperator.cpp
+CMakeFiles/cfd.dir/src/engine/linearOperator.cpp.o: CMakeFiles/cfd.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/matthias/Projects/cpp/CFD/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/cfd.dir/src/engine/linearOperator.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/cfd.dir/src/engine/linearOperator.cpp.o -MF CMakeFiles/cfd.dir/src/engine/linearOperator.cpp.o.d -o CMakeFiles/cfd.dir/src/engine/linearOperator.cpp.o -c /home/matthias/Projects/cpp/CFD/src/engine/linearOperator.cpp
+
+CMakeFiles/cfd.dir/src/engine/linearOperator.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/cfd.dir/src/engine/linearOperator.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/matthias/Projects/cpp/CFD/src/engine/linearOperator.cpp > CMakeFiles/cfd.dir/src/engine/linearOperator.cpp.i
+
+CMakeFiles/cfd.dir/src/engine/linearOperator.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/cfd.dir/src/engine/linearOperator.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/matthias/Projects/cpp/CFD/src/engine/linearOperator.cpp -o CMakeFiles/cfd.dir/src/engine/linearOperator.cpp.s
 
 # Object files for target cfd
 cfd_OBJECTS = \
@@ -148,7 +162,8 @@ cfd_OBJECTS = \
 "CMakeFiles/cfd.dir/src/graphics/renderer.cpp.o" \
 "CMakeFiles/cfd.dir/src/engine/engine.cpp.o" \
 "CMakeFiles/cfd.dir/src/engine/grid.cpp.o" \
-"CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.o"
+"CMakeFiles/cfd.dir/src/engine/solver.cpp.o" \
+"CMakeFiles/cfd.dir/src/engine/linearOperator.cpp.o"
 
 # External object files for target cfd
 cfd_EXTERNAL_OBJECTS =
@@ -157,14 +172,19 @@ cfd: CMakeFiles/cfd.dir/src/main.cpp.o
 cfd: CMakeFiles/cfd.dir/src/graphics/renderer.cpp.o
 cfd: CMakeFiles/cfd.dir/src/engine/engine.cpp.o
 cfd: CMakeFiles/cfd.dir/src/engine/grid.cpp.o
-cfd: CMakeFiles/cfd.dir/src/engine/pressureSolver.cpp.o
+cfd: CMakeFiles/cfd.dir/src/engine/solver.cpp.o
+cfd: CMakeFiles/cfd.dir/src/engine/linearOperator.cpp.o
 cfd: CMakeFiles/cfd.dir/build.make
 cfd: CMakeFiles/cfd.dir/compiler_depend.ts
 cfd: /usr/lib/libsfml-graphics.so.3.1.0
 cfd: /usr/lib/libsfml-window.so.3.1.0
 cfd: /usr/lib/libsfml-system.so.3.1.0
+cfd: _deps/kokkos-build/containers/src/libkokkoscontainers.a
+cfd: _deps/kokkos-build/algorithms/src/libkokkosalgorithms.a
+cfd: _deps/kokkos-build/simd/src/libkokkossimd.a
+cfd: _deps/kokkos-build/core/src/libkokkoscore.a
 cfd: CMakeFiles/cfd.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/matthias/Projects/cpp/CFD/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Linking CXX executable cfd"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/matthias/Projects/cpp/CFD/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Linking CXX executable cfd"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/cfd.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

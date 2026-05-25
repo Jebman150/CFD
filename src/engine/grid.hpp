@@ -67,25 +67,53 @@ enum ScalarFieldID {
     NumFields
 };
 
-struct ScalarField {
-    std::vector<float> data;
+template<typename T>
+class Field {
+private:
+    IndexContext indexContext;
+    std::vector<T> data;
+
+public:
     bool advect;
+
+    Field() : Field({0}) {}
+    Field(std::vector<int> size): indexContext(size), data(std::vector<T>(indexContext.nMax)), advect(false) {}
+    Field(std::vector<int> size, T _init): indexContext(size), data(std::vector<T>(indexContext.nMax, _init)), advect(false) {}
+
+    T at(MultiIndex idx) const {
+        assert(idx.checkContext(&indexContext));
+        assert(idx.isValid());
+        return data.at(idx.get());
+    }
+
+    T& at(MultiIndex idx) {
+        assert(idx.checkContext(&indexContext));
+        assert(idx.isValid());
+        return data.at(idx.get());
+    }
+
+    MultiIndex begin() const { return MultiIndex(&indexContext); }
+    MultiIndex end() const { return MultiIndex(indexContext.nMax, &indexContext); }
+    void setData(const std::vector<T>& _data) { data = _data; }
+    const IndexContext* getContext() const { return &indexContext; }
+
+    const std::vector<T>& getData() const { return data; }
 };
 
 class Grid {
     // Grid topology
     int totalCellCount = 0;
-    std::array<int, Axis::Dim> n;
-    std::array<float, Axis::Dim> d;
+    std::vector<int> n;
+    std::vector<float> d;
 
     // Grid data
-    std::vector<CellType> cellType;
+    Field<CellType> cellType;
 
-    std::array<ScalarField, ScalarFieldID::NumFields> scalarFields;
+    std::array<Field<float>, ScalarFieldID::NumFields> scalarFields;
 
     // Edge data
-    std::array<std::vector<float>, Axis::Dim> velocities;
-    std::array<std::vector<FaceType>, Axis::Dim> faceTypes;
+    std::array<Field<float>, Axis::Dim> velocities;
+    std::array<Field<FaceType>, Axis::Dim> faceTypes;
 
     float getExactVelocity(Axis axis, MultiIndex idx) const;
     float getExactScalar(ScalarFieldID type, MultiIndex idx) const;
@@ -94,17 +122,17 @@ class Grid {
     float getScalarGradY(ScalarFieldID type, GridCoord coord) const;
     float getScalarGradZ(ScalarFieldID type, GridCoord coord) const;
 public:
-    void initialize(std::array<int, Axis::Dim> _n, std::array<float, 6> _boundaryCondition);
+    void initialize(std::vector<int> _n, std::array<float, 6> _boundaryCondition);
 
     // Setter
-    void setVelocity(Axis axis, MultiIndex idx, float val) { velocities[axis].at(idx.get()) = val; }
+    void setVelocity(Axis axis, MultiIndex idx, float val) { velocities[axis].at(idx) = val; }
 
-    void setSolid(MultiIndex idx) { cellType.at(idx.get()) = CellType::Solid; }
+    void setSolid(MultiIndex idx) { cellType.at(idx) = CellType::Solid; }
 
-    void setScalarField(ScalarFieldID type, MultiIndex idx, float val) { scalarFields[static_cast<int>(type)].data.at(idx.get()) = val; }
-    void overrideScalarField(ScalarFieldID type, std::vector<float> data) { scalarFields[static_cast<int>(type)].data = data; }
+    void setScalarField(ScalarFieldID type, MultiIndex idx, float val) { scalarFields[static_cast<int>(type)].at(idx) = val; }
+    void overrideScalarField(ScalarFieldID type, std::vector<float> data) { scalarFields[static_cast<int>(type)].setData(data); }
 
-    void overrideVelocities(std::array<std::vector<float>, Axis::Dim> buffer) {
+    void overrideVelocities(std::array<Field<float>, Axis::Dim> buffer) {
         velocities = buffer;
     }
 
@@ -119,26 +147,32 @@ public:
 
     CellType getCellType(MultiIndex idx) const {
         if(!idx.isValid()) return CellType::Solid;
-        return cellType.at(idx.get()); 
+        return cellType.at(idx); 
+    }
+    
+    const Field<CellType>& getCellTypeField() const {
+        return cellType; 
     }
 
     float getScalarField(ScalarFieldID type, GridCoord coord) const;
-    ScalarField& getScalarField(ScalarFieldID type) { return scalarFields[type]; }
+    Field<float>& getScalarField(ScalarFieldID type) { return scalarFields[type]; }
 
     float getMaxVelocity() const;
 
+    const IndexContext* getCellContext() const { return cellType.getContext(); }
+    MultiIndex getCellIndex() const { return cellType.begin(); }
     int getCellCount() const { return totalCellCount; }
     int getSize(Axis axis) const { return n.at(axis); }
-    std::array<int, Axis::Dim> getSize() const { return n; }
+    std::vector<int> getSize() const { return n; }
     int getMACCellCount(Axis axis) const { 
         auto nMac = getMACSize(axis);
-        int sum = 0;
+        int sum = 1;
         for(int i = 0; i < Axis::Dim; i++) {
             sum *= nMac[i];
         }
         return sum;
     }
-    std::array<int, Axis::Dim> getMACSize(Axis axis) const {
+    std::vector<int> getMACSize(Axis axis) const {
         auto nMAC = n;
         nMAC[axis]++;
         return nMAC;
@@ -156,26 +190,26 @@ public:
 
     template<typename Func, typename Condition>
     void forEachCell(Func func, Condition cond) {
-        for(MultiIndex idx(n); !idx.overflow(); idx++) {
+        for(MultiIndex idx = cellType.begin(); !idx.overflow(); idx++) {
             CellView view = {
                 idx,
                 GridCoord(idx),
-                cellType.at(idx.get())
+                cellType.at(idx)
             };
             if(cond(view)) func(view);
         }
     }
 
     template<typename Func>
-    void queryCells(Func func) const { queryCells(func, [](CellView cell) { return true; }); }
+    void queryCells(Func func) const { queryCells(func, [](ConstCellView cell) { return true; }); }
 
     template<typename Func, typename Condition>
     void queryCells(Func func, Condition cond) const {
-        for(MultiIndex idx(n); !idx.overflow(); idx++) {
+        for(MultiIndex idx = cellType.begin(); !idx.overflow(); idx++) {
             ConstCellView view = {
                 idx,
                 GridCoord(idx),
-                cellType.at(idx.get()),
+                cellType.at(idx),
                 1.f/(d[0] * d[0])
             };
             if(cond(view)) func(view);
@@ -183,16 +217,49 @@ public:
     }
 
     template<typename Func>
-    void forEachNeighbour(MultiIndex idx, Func func) const {
-        auto neighbourIdx = idx.getPreceding();
-        for(auto i : idx.getSucceeding()) neighbourIdx.emplace_back(i);
+    void queryCells(Plane plane, Func func) const {
+        for(MultiIndex idx = cellType.begin(); !idx.overflow(); idx++) {
+            if(idx.getIndices()[plane.axis] != plane.side) continue;
+            ConstCellView view = {
+                idx,
+                GridCoord(idx),
+                cellType.at(idx),
+                1.f/(d[0] * d[0])
+            };
+            func(view);
+        }
+    }
 
+    template<typename Func>
+    void forEachNeighbour(MultiIndex idx, Func func) const {
+        forEachSuccessor(idx, func);
+        forEachPredecessor(idx, func);
+    }
+
+    template<typename Func>
+    void forEachPredecessor(MultiIndex idx, Func func) const {
+        auto neighbourIdx = idx.getPreceeding();
         for(auto nIdx : neighbourIdx) {
-            if(!isValid(nIdx)) continue;
+            if(!nIdx.isValid()) continue;
             ConstCellView view = {
                 nIdx,
                 GridCoord(nIdx),
-                cellType.at(idx.get()),
+                cellType.at(nIdx),
+                1.f/(d[0] * d[0])
+            };
+            func(view);
+        }
+    }
+
+    template<typename Func>
+    void forEachSuccessor(MultiIndex idx, Func func) const {
+        auto neighbourIdx = idx.getSucceeding();
+        for(auto nIdx : neighbourIdx) {
+            if(!nIdx.isValid()) continue;
+            ConstCellView view = {
+                nIdx,
+                GridCoord(nIdx),
+                cellType.at(nIdx),
                 1.f/(d[0] * d[0])
             };
             func(view);
@@ -202,15 +269,15 @@ public:
     // Face iterator
     template<typename Func>
     void forEachFace(Plane plane, Func func) {
-        for(MultiIndex idx(getMACSize(plane.axis)); !idx.overflow(); idx++) {
-            if(idx.getIndices()[plane.axis] == plane.side) continue;
+        for(MultiIndex idx = velocities[plane.axis].begin(); !idx.overflow(); idx++) {
+            if(idx.getIndices()[plane.axis] != plane.side) continue;
             FaceView view = {
-                velocities[plane.axis].at(idx.get()),
+                velocities[plane.axis].at(idx),
                 idx,
-                GridCoord(idx),
-                faceTypes.at(idx.get()),
+                    GridCoord(idx, static_cast<Axis>(plane.axis)),
+                faceTypes[plane.axis].at(idx),
                 plane.axis
-            }
+            };
             func(view);
         }
     }
@@ -218,16 +285,15 @@ public:
     template<typename Func>
     void forEachTangentFace(Plane plane, Func func) {
         for(int i = 0; i < Axis::Dim; i++) {
-            for(MultiIndex idx(getMACSize(i)); !idx.overflow(); idx++) {
-                if(idx.getIndices()[plane.axis] == plane.side && plane.axis != i) continue;
+            for(MultiIndex idx = velocities[i].begin(); !idx.overflow(); idx++) {
+                if(idx.getIndices()[plane.axis] != plane.side && plane.axis != i) continue;
                 FaceView view = {
-                    velocities[i].at(idx.get()),
+                    velocities[i].at(idx),
                     idx,
-                    GridCoord(idx),
-                    faceTypes.at(idx.get()),
+                    GridCoord(idx, static_cast<Axis>(i)),
+                    faceTypes[i].at(idx),
                     static_cast<Axis>(i)
-                }
-                if(!cond(view)) continue;
+                };
                 func(view);
             }
         }
@@ -239,14 +305,14 @@ public:
     template<typename Condition, typename Func>
     void forEachFace(Func func, Condition cond) {
         for(int i = 0; i < Axis::Dim; i++) {
-            for(MultiIndex idx(getMACSize(i)); !idx.overflow(); idx++) {
+            for(MultiIndex idx = velocities[i].begin(); !idx.overflow(); idx++) {
                 FaceView view = {
-                    velocities[i].at(idx.get()),
+                    velocities[i].at(idx),
                     idx,
-                    GridCoord(idx),
-                    faceTypes.at(idx.get()),
+                    GridCoord(idx, static_cast<Axis>(i)),
+                    faceTypes[i].at(idx),
                     static_cast<Axis>(i)
-                }
+                };
                 if(!cond(view)) continue;
                 func(view);
             }
@@ -254,17 +320,32 @@ public:
     }
 
     template<typename Func>
-    void queryTangentFace(Plane plane, Func func) {
+    void queryFaces(Plane plane, Func func) {
+        for(MultiIndex idx = velocities[plane.axis].begin(); !idx.overflow(); idx++) {
+            if(idx.getIndices()[plane.axis] != plane.side) continue;
+            ConstFaceView view = {
+                velocities[plane.axis].at(idx),
+                idx,
+                GridCoord(idx, static_cast<Axis>(plane.axis)),
+                faceTypes[plane.axis].at(idx),
+                plane.axis
+            };
+            func(view);
+        }
+    }
+
+    template<typename Func>
+    void queryTangentFaces(Plane plane, Func func) const {
         for(int i = 0; i < Axis::Dim; i++) {
-            for(MultiIndex idx(getMACSize(static_cast<Axis>(i))); !idx.overflow(); idx++) {
-                if(idx.getIndices()[plane.axis] == plane.side && plane.axis != i) continue;
+            for(MultiIndex idx = velocities[plane.axis].begin(); !idx.overflow(); idx++) {
+                if(idx.getIndices()[plane.axis] != plane.side && plane.axis != i) continue;
                 ConstFaceView view = {
-                    velocities[i].at(idx.get()),
+                    velocities[i].at(idx),
                     idx,
-                    GridCoord(idx),
-                    faceTypes.at(idx.get()),
+                    GridCoord(idx, static_cast<Axis>(i)),
+                    faceTypes[i].at(idx),
                     static_cast<Axis>(i)
-                }
+                };
                 func(view);
             }
         }
@@ -276,14 +357,14 @@ public:
     template<typename Condition, typename Func>
     void queryFaces(Func func, Condition cond) const {
         for(int i = 0; i < Axis::Dim; i++) {
-            for(MultiIndex idx(getMACSize(static_cast<Axis>(i))); !idx.overflow(); idx++) {
+            for(MultiIndex idx = velocities[i].begin(); !idx.overflow(); idx++) {
                 ConstFaceView view = {
-                    velocities[i].at(idx.get()),
+                    velocities[i].at(idx),
                     idx,
-                    GridCoord(idx),
-                    faceTypes.at(idx.get()),
+                    GridCoord(idx, static_cast<Axis>(i)),
+                    faceTypes[i].at(idx),
                     static_cast<Axis>(i)
-                }
+                };
                 if(!cond(view)) continue;
                 func(view);
             }
@@ -292,20 +373,31 @@ public:
 
     void updateFaceTypes() {
         for(int i = 0; i < Axis::Dim; i++) {
-            for(MultiIndex idx(getMACSize(static_cast<Axis>(i))); !idx.overflow(); idx++) {
+            for(MultiIndex idx = faceTypes[i].begin(); !idx.overflow(); idx++) {
                 CellType left;
                 CellType right;
 
-                auto indices = idx.getIndices();
-                indices[i] -= 1;
-                if(indices[i] < 0) left = CellType::Solid;
-                else cellType.at(MultiIndex(n, indices).get());
+                auto cellIdx = idx.transformedToContext(cellType.getContext());
+                if(!cellIdx.isValid()) right = CellType::Solid;
+                else right = cellType.at(cellIdx);
 
-
-                indices[i] += 2;
-                if(indices[i] >= n.at(i)) left = CellType::Solid;
-                else cellType.at(MultiIndex(n, indices).get());
+                cellIdx.advance(static_cast<Axis>(i), -1);
+                if(!cellIdx.isValid()) left = CellType::Solid;
+                else left = cellType.at(cellIdx);
                 
+                if(left == CellType::Solid) {
+                    if(right == CellType::Solid) {
+                        faceTypes[i].at(idx) = FaceType::Solid_Solid;
+                    } else {
+                        faceTypes[i].at(idx) = FaceType::Solid_Fluid;
+                    }
+                } else {
+                    if(right == CellType::Solid) {
+                        faceTypes[i].at(idx) = FaceType::Fluid_Solid;
+                    } else {
+                        faceTypes[i].at(idx) = FaceType::Fluid_Fluid;
+                    }
+                }
             }
         }
     }

@@ -563,8 +563,209 @@ CMakeFiles/cfd.dir/src/main.cpp.o: \
  /home/matthias/Projects/cpp/CFD/eigen/Eigen/src/Eigenvalues/MatrixBaseEigenvalues.h \
  /home/matthias/Projects/cpp/CFD/src/engine/navigation.hpp \
  /usr/include/c++/16.1.1/iostream \
- /home/matthias/Projects/cpp/CFD/src/engine/pressureSolver.hpp \
- /home/matthias/Projects/cpp/CFD/eigen/Eigen/Sparse \
+ /home/matthias/Projects/cpp/CFD/src/engine/solver.hpp \
+ /home/matthias/Projects/cpp/CFD/src/engine/linearOperator.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_Core.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_Core_fwd.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_Macros.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/KokkosCore_config.h \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_DesulAtomicsConfig.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_NvidiaGpuArchitectures.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/KokkosCore_Config_SetupBackend.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_Printf.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_Error.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_Abort.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_Assert.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_Utilities.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/KokkosCore_Config_FwdBackend.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/fwd/Kokkos_Fwd_SERIAL.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/KokkosCore_Config_DeclareBackend.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/decl/Kokkos_Declare_SERIAL.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Serial/Kokkos_Serial.hpp \
+ /usr/include/c++/16.1.1/iterator \
+ /usr/include/c++/16.1.1/bits/stream_iterator.h \
+ /usr/include/c++/16.1.1/mutex /usr/include/c++/16.1.1/bits/chrono.h \
+ /usr/include/c++/16.1.1/ratio /usr/include/c++/16.1.1/ctime \
+ /usr/include/c++/16.1.1/bits/parse_numbers.h \
+ /usr/include/c++/16.1.1/bits/std_mutex.h \
+ /usr/include/c++/16.1.1/bits/unique_lock.h \
+ /usr/include/c++/16.1.1/thread /usr/include/c++/16.1.1/stop_token \
+ /usr/include/c++/16.1.1/atomic /usr/include/c++/16.1.1/bits/std_thread.h \
+ /usr/include/c++/16.1.1/semaphore \
+ /usr/include/c++/16.1.1/bits/semaphore_base.h \
+ /usr/include/c++/16.1.1/bits/atomic_timed_wait.h \
+ /usr/include/c++/16.1.1/bits/this_thread_sleep.h /usr/include/sys/time.h \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_Layout.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_Traits.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_HostSpace.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_Concepts.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_DetectionIdiom.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_MemoryTraits.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_BitManipulation.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_NumericTraits.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_SharedAlloc.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_Tools.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_Profiling.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_ExecPolicy.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_AnalyzePolicy.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/traits/Kokkos_Traits_fwd.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/traits/Kokkos_PolicyTraitAdaptor.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/traits/Kokkos_ExecutionSpaceTrait.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/traits/Kokkos_GraphKernelTrait.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_GraphImpl_fwd.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/traits/Kokkos_IndexTypeTrait.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/traits/Kokkos_IterationPatternTrait.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_Rank.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/traits/Kokkos_LaunchBoundsTrait.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/traits/Kokkos_StaticBatchSizeTrait.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/traits/Kokkos_OccupancyControlTrait.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/traits/Kokkos_ScheduleTrait.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/traits/Kokkos_WorkItemPropertyTrait.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/traits/Kokkos_WorkTagTrait.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_TypeInfo.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_Tuners.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/KokkosExp_MDRangePolicy.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_Array.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_Swap.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_StringManipulation.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/KokkosExp_Host_IterateTile.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_Profiling_Interface.hpp \
+ /usr/include/c++/16.1.1/cinttypes /usr/include/inttypes.h \
+ /usr/include/dlfcn.h /usr/include/bits/dlfcn.h \
+ /usr/include/bits/dl_find_object.h \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_Profiling_DeviceInfo.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_Profiling_C_Interface.h \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_HostSpace_deepcopy.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_ScratchSpace.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_HostThreadTeam.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_Pair.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_Atomic.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_Atomics_Desul_Wrapper.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include/desul/atomics.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include/desul/atomics/Atomic_Ref.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include/desul/atomics/Common.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include/desul/atomics/Macros.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-build/core/src/desul/atomics/Config.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include/desul/atomics/Generic.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include/desul/atomics/Compare_Exchange.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include/desul/atomics/Compare_Exchange_GCC.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include/desul/atomics/Lock_Array.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include/desul/atomics/Thread_Fence_GCC.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include/desul/atomics/Adapt_GCC.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include/desul/atomics/Compare_Exchange_ScopeCaller.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include/desul/atomics/Fetch_Op.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include/desul/atomics/Fetch_Op_GCC.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include/desul/atomics/Fetch_Op_ScopeCaller.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include/desul/atomics/Fetch_Op_Generic.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include/desul/atomics/Lock_Based_Fetch_Op.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include/desul/atomics/Lock_Based_Fetch_Op_Host.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include/desul/atomics/Thread_Fence.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include/desul/atomics/Thread_Fence_ScopeCaller.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include/desul/atomics/Lock_Free_Fetch_Op.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/desul/include/desul/atomics/Operator_Function_Objects.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_Volatile_Load.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_FunctorAnalysis.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_HostBarrier.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_HostSharedPtr.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_InitializationSettings.hpp \
+ /usr/include/c++/16.1.1/optional \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Serial/Kokkos_Serial_Parallel_Range.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_Parallel.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_CheckUsage.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_View.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/View/Kokkos_BasicView.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_InitializeFinalize.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/View/Kokkos_ViewAlloc.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_ZeroMemset_fwd.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/View/Kokkos_ViewAccessPreconditionsCheck.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/View/MDSpan/Kokkos_MDSpan_Header.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include/mdspan/mdspan.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include/experimental/__p0009_bits/default_accessor.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include/experimental/__p0009_bits/macros.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include/experimental/__p0009_bits/config.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include/experimental/__p0009_bits/full_extent_t.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include/experimental/__p0009_bits/mdspan.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include/experimental/__p0009_bits/layout_right.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include/experimental/__p0009_bits/trait_backports.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include/experimental/__p0009_bits/extents.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include/experimental/__p0009_bits/dynamic_extent.hpp \
+ /usr/include/c++/16.1.1/span \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include/experimental/__p0009_bits/utility.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include/experimental/__p0009_bits/layout_stride.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include/experimental/__p0009_bits/compressed_pair.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include/experimental/__p2642_bits/layout_padded_fwd.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include/experimental/__p0009_bits/layout_left.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include/experimental/__p2642_bits/layout_padded.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include/experimental/__p2630_bits/submdspan.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include/experimental/__p2630_bits/submdspan_extents.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include/experimental/__p2630_bits/strided_slice.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include/experimental/__p2630_bits/submdspan_mapping.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/tpls/mdspan/include/experimental/__p2389_bits/dims.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/View/Kokkos_ViewCtor.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/View/Kokkos_ViewTraits.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/View/Hooks/Kokkos_ViewHooks.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/View/MDSpan/Kokkos_MDSpan_Layout.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/View/MDSpan/Kokkos_MDSpan_Extents.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/View/MDSpan/Kokkos_MDSpan_Header.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/View/Kokkos_ViewDataAnalysis.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/View/MDSpan/Kokkos_MDSpan_Accessor.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/View/Kokkos_ViewMapping.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_Extents.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/View/Kokkos_ViewTracker.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/View/Kokkos_ViewAtomic.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_MinMax.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/View/Kokkos_ViewCommonType.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/View/Kokkos_ViewUniformType.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_Tools_Generic.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_Parallel_Reduce.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_BuiltinReducers.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_ReductionIdentity.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Serial/Kokkos_Serial_Parallel_MDRange.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Serial/Kokkos_Serial_Parallel_Team.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Serial/Kokkos_Serial_UniqueToken.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_UniqueToken.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Serial/Kokkos_Serial_MDRangePolicy.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Serial/Kokkos_Serial_ZeroMemset.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_Half.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_Half_FloatingPointWrapper.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_Half_NumericTraits.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_Half_ReductionIdentity.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_Half_MathematicalFunctions.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_MathematicalFunctions.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_AnonymousSpace.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_Clamp.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_MathematicalConstants.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_MathematicalSpecialFunctions.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_Complex.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_MemoryPool.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_ConcurrentBitset.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_ClockTic.hpp \
+ /usr/include/c++/16.1.1/chrono /usr/include/c++/16.1.1/bits/chrono_io.h \
+ /usr/include/c++/16.1.1/format /usr/include/c++/16.1.1/charconv \
+ /usr/include/c++/16.1.1/locale \
+ /usr/include/c++/16.1.1/bits/locale_facets_nonio.h \
+ /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/time_members.h \
+ /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/messages_members.h \
+ /usr/include/libintl.h /usr/include/c++/16.1.1/bits/codecvt.h \
+ /usr/include/c++/16.1.1/bits/locale_facets_nonio.tcc \
+ /usr/include/c++/16.1.1/bits/locale_conv.h \
+ /usr/include/c++/16.1.1/bits/monostate.h \
+ /usr/include/c++/16.1.1/bits/formatfwd.h \
+ /usr/include/c++/16.1.1/bits/unicode.h \
+ /usr/include/c++/16.1.1/bits/unicode-data.h \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_Vectorization.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_hwloc.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_Timer.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_CopyViews.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_TeamMDPolicy.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_ScopeGuard.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_PartitionSpace.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_CStyleMemoryManagement.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_Crs.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_WorkGraphPolicy.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Serial/Kokkos_Serial_WorkGraphPolicy.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/impl/Kokkos_Combined_Reducer.hpp \
+ /home/matthias/Projects/cpp/CFD/build/_deps/kokkos-src/core/src/Kokkos_AcquireUniqueTokenImpl.hpp \
  /home/matthias/Projects/cpp/CFD/src/graphics/renderer.hpp \
  /home/matthias/Projects/cpp/CFD/src/graphics/parameter.hpp \
  /usr/include/SFML/Graphics.hpp /usr/include/SFML/Graphics/BlendMode.hpp \
@@ -577,8 +778,7 @@ CMakeFiles/cfd.dir/src/main.cpp.o: \
  /usr/include/SFML/Graphics/PrimitiveType.hpp \
  /usr/include/SFML/Graphics/Rect.hpp /usr/include/SFML/System/Vector2.hpp \
  /usr/include/SFML/System/Angle.hpp /usr/include/SFML/System/Angle.inl \
- /usr/include/SFML/System/Vector2.inl /usr/include/c++/16.1.1/optional \
- /usr/include/SFML/Graphics/Rect.inl \
+ /usr/include/SFML/System/Vector2.inl /usr/include/SFML/Graphics/Rect.inl \
  /usr/include/SFML/Graphics/RenderStates.hpp \
  /usr/include/SFML/Graphics/CoordinateType.hpp \
  /usr/include/SFML/Graphics/StencilMode.hpp \
@@ -593,17 +793,7 @@ CMakeFiles/cfd.dir/src/main.cpp.o: \
  /usr/include/SFML/Window/GlResource.hpp \
  /usr/include/SFML/Window/Export.hpp /usr/include/c++/16.1.1/filesystem \
  /usr/include/c++/16.1.1/bits/fs_fwd.h \
- /usr/include/c++/16.1.1/bits/chrono.h /usr/include/c++/16.1.1/ratio \
- /usr/include/c++/16.1.1/ctime \
- /usr/include/c++/16.1.1/bits/parse_numbers.h \
- /usr/include/c++/16.1.1/bits/fs_path.h /usr/include/c++/16.1.1/locale \
- /usr/include/c++/16.1.1/bits/locale_facets_nonio.h \
- /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/time_members.h \
- /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/messages_members.h \
- /usr/include/libintl.h /usr/include/c++/16.1.1/bits/codecvt.h \
- /usr/include/c++/16.1.1/bits/locale_facets_nonio.tcc \
- /usr/include/c++/16.1.1/bits/locale_conv.h \
- /usr/include/c++/16.1.1/iomanip \
+ /usr/include/c++/16.1.1/bits/fs_path.h /usr/include/c++/16.1.1/iomanip \
  /usr/include/c++/16.1.1/bits/quoted_string.h \
  /usr/include/c++/16.1.1/codecvt /usr/include/c++/16.1.1/bits/fs_dir.h \
  /usr/include/c++/16.1.1/bits/fs_ops.h \
@@ -620,21 +810,12 @@ CMakeFiles/cfd.dir/src/main.cpp.o: \
  /usr/include/SFML/Window/Vulkan.hpp \
  /usr/include/SFML/Window/WindowEnums.hpp \
  /usr/include/SFML/Window/WindowHandle.hpp \
- /usr/include/SFML/System/Time.hpp /usr/include/c++/16.1.1/chrono \
- /usr/include/c++/16.1.1/bits/chrono_io.h /usr/include/c++/16.1.1/format \
- /usr/include/c++/16.1.1/charconv /usr/include/c++/16.1.1/span \
- /usr/include/c++/16.1.1/bits/monostate.h \
- /usr/include/c++/16.1.1/bits/formatfwd.h \
- /usr/include/c++/16.1.1/bits/unicode.h \
- /usr/include/c++/16.1.1/bits/unicode-data.h \
- /usr/include/SFML/System/Time.inl \
+ /usr/include/SFML/System/Time.hpp /usr/include/SFML/System/Time.inl \
  /usr/include/SFML/Window/WindowBase.inl \
  /usr/include/SFML/Window/Event.hpp /usr/include/SFML/Window/Joystick.hpp \
  /usr/include/SFML/System/String.hpp /usr/include/SFML/System/Export.hpp \
  /usr/include/SFML/System/Utf.hpp /usr/include/SFML/System/Utf.inl \
- /usr/include/SFML/System/Err.hpp /usr/include/c++/16.1.1/iterator \
- /usr/include/c++/16.1.1/bits/stream_iterator.h \
- /usr/include/SFML/System/String.inl \
+ /usr/include/SFML/System/Err.hpp /usr/include/SFML/System/String.inl \
  /usr/include/SFML/Window/Keyboard.hpp /usr/include/SFML/Window/Mouse.hpp \
  /usr/include/SFML/Window/Sensor.hpp /usr/include/SFML/System/Vector3.hpp \
  /usr/include/SFML/System/Vector3.inl /usr/include/c++/16.1.1/variant \
@@ -654,10 +835,4 @@ CMakeFiles/cfd.dir/src/main.cpp.o: \
  /usr/include/SFML/System/Sleep.hpp \
  /usr/include/SFML/System/TimeoutWithPredicate.hpp \
  /usr/include/SFML/System/Version.hpp \
- /home/matthias/Projects/cpp/CFD/src/engine/tracer.hpp \
- /usr/include/c++/16.1.1/thread /usr/include/c++/16.1.1/stop_token \
- /usr/include/c++/16.1.1/atomic /usr/include/c++/16.1.1/bits/std_thread.h \
- /usr/include/c++/16.1.1/semaphore \
- /usr/include/c++/16.1.1/bits/semaphore_base.h \
- /usr/include/c++/16.1.1/bits/atomic_timed_wait.h \
- /usr/include/c++/16.1.1/bits/this_thread_sleep.h /usr/include/sys/time.h
+ /home/matthias/Projects/cpp/CFD/src/engine/tracer.hpp

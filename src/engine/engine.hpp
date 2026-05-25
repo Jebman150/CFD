@@ -9,7 +9,7 @@ namespace engine {
 class Engine {
     Grid grid;
     std::unique_ptr<Solver> solver;
-    LaplacianOperatorCPU laplacian;
+    LaplacianOperatorGPU laplacian;
 
     float deltaT;
 
