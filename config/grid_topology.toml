@@ -1,0 +1,18 @@
+grid_size = [80, 40]
+delta_x = 0.3
+
+[[boundary_condition]]
+condition_type = "neumann"
+value = 15
+
+[[boundary_condition]]
+condition_type = "neumann"
+value = 15
+
+[[boundary_condition]]
+condition_type = "neumann"
+value = 0
+
+[[boundary_condition]]
+condition_type = "neumann"
+value = 0
