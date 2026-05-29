@@ -127,6 +127,25 @@ impl KernelManager {
         })
     }
 
+    pub fn create_uniform<T>(&self, write: bool, output: bool) -> wgpu::Buffer {
+        let buffer_size = (std::mem::size_of::<T>()) as wgpu::BufferAddress;
+
+        let mut usage = wgpu::BufferUsages::UNIFORM;
+        if write {
+            usage = usage | wgpu::BufferUsages::COPY_DST;
+        }
+        if output {
+            usage = usage | wgpu::BufferUsages::COPY_SRC;
+        }
+
+        self.device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("Input Buffer"),
+            size: buffer_size,
+            usage: usage,
+            mapped_at_creation: false
+        })
+    }
+
     pub fn create_const_buffer<T: bytemuck::Pod>(&self, data: &[T]) -> wgpu::Buffer {
         self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Input Buffer"),
@@ -140,6 +159,14 @@ impl KernelManager {
             &buffer,
             0,
             bytemuck::cast_slice(&data));
+        self
+    }
+
+    pub fn update_uniform<T: bytemuck::Pod>(&self, buffer: &wgpu::Buffer, data: T) -> &Self {
+        self.queue.write_buffer(
+            &buffer,
+            0,
+            bytemuck::cast_slice(&[data]));
         self
     }
 
@@ -181,6 +208,21 @@ impl KernelManager {
             visibility: wgpu::ShaderStages::COMPUTE,
             ty: wgpu::BindingType::Buffer {
                 ty: wgpu::BufferBindingType::Storage { read_only: read_only },
+                has_dynamic_offset: false,
+                min_binding_size: None,
+            },
+            count: None,
+        });
+
+        self
+    }
+
+    pub fn add_layout_uniform(&mut self, binding: u32) -> &mut Self {
+        self.buffer_layout.push(wgpu::BindGroupLayoutEntry {
+            binding: binding,
+            visibility: wgpu::ShaderStages::COMPUTE,
+            ty: wgpu::BindingType::Buffer {
+                ty: wgpu::BufferBindingType::Uniform,
                 has_dynamic_offset: false,
                 min_binding_size: None,
             },

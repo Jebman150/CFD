@@ -3,11 +3,11 @@ delta_x = 0.3
 
 [[boundary_condition]]
 condition_type = "neumann"
-value = 15
+value = 150
 
 [[boundary_condition]]
 condition_type = "neumann"
-value = 15
+value = 150
 
 [[boundary_condition]]
 condition_type = "neumann"

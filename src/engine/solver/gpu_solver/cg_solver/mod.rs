@@ -8,7 +8,8 @@ use super::gpu::{Kernel, KernelManager};
 
 struct Kernels {
     pub apply: Kernel,
-    pub dot: Kernel,
+    pub mul: Kernel,
+    pub reduce: Kernel,
     pub update_xr: Kernel,
     pub update_p: Kernel
 }
@@ -16,9 +17,17 @@ struct Kernels {
 struct BindGroups {
     pub apply: wgpu::BindGroup,
     pub dot: wgpu::BindGroup,
+    pub reduce: wgpu::BindGroup,
     pub update_xr: wgpu::BindGroup,
     pub error: wgpu::BindGroup,
     pub update_p: wgpu::BindGroup,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
+struct Parameter {
+    alpha: f32,
+    beta: f32,
 }
 
 struct GPUState {
@@ -33,8 +42,8 @@ struct GPUState {
 
     pub partial: wgpu::Buffer,
 
-    pub alpha: wgpu::Buffer,
-    pub beta: wgpu::Buffer,
+    pub param: wgpu::Buffer,
+    pub reduction_size: wgpu::Buffer,
 }
 
 pub struct CGSolver {
@@ -145,21 +154,12 @@ impl SolvingAlgorithm for CGSolver {
 
         let groups = [(n as u32 + 63) / 64, 1, 1];
 
-        let mut partial_dot: Vec<f32> = vec![0.0; (n as f32 / 64.0).ceil() as usize];
-
-        self.manager.update_buffer::<f32>(&buffers.partial, &vec![0.0; (n as f32 / 64.0).ceil() as usize]);
-        self.manager.execute_kernel(
-            &kernels.dot, 
-            &bind_groups.error,
-            &groups
-        );
-        self.manager.retrieve_data(
-            &kernels.dot, 
-            &buffers.partial,
-            &mut partial_dot
-        );
-        let mut rs_old: f32 = partial_dot.iter().sum();
+        let mut rs_old: f32 = self.dot(&bind_groups.error, n as u32).sqrt();
         let scale = dot(b, b).sqrt();
+
+        println!("Check dot: {} and {}", rs_old, scale);
+
+        let mut parameter: Parameter = Parameter { alpha: 0.0, beta: 0.0 };
 
         for iter in 0..maxit {
             let op_start = Instant::now();
@@ -171,31 +171,18 @@ impl SolvingAlgorithm for CGSolver {
             operator_time += op_start.elapsed().subsec_micros();
 
             let dot_start = Instant::now();
-            self.manager.update_buffer::<f32>(&buffers.partial, &vec![0.0; (n as f32 / 64.0).ceil() as usize]);
-            self.manager.execute_kernel(
-                &kernels.dot,
-                &bind_groups.dot,
-                &groups
-            );
+            let denom = self.dot(&bind_groups.dot, n as u32);
             dot_time += dot_start.elapsed().subsec_micros();
-
-            self.manager.retrieve_data(
-                &kernels.dot, 
-                &buffers.partial,
-                &mut partial_dot
-            );
-
-            let denom: f32 = partial_dot.iter().sum();
 
             if denom.abs() < 1e-20 {
                 println!("CG breakdown");
                 return iter;
             }
 
-            let alpha = rs_old / denom;
+            parameter.alpha = rs_old / denom;
 
             let assign_start = Instant::now();
-            self.manager.update_buffer(&buffers.alpha, &[alpha]);
+            self.manager.update_uniform(&buffers.param, parameter);
             self.manager.execute_kernel(
                 &kernels.update_xr, 
                 &bind_groups.update_xr, 
@@ -204,18 +191,7 @@ impl SolvingAlgorithm for CGSolver {
             assign_time += assign_start.elapsed().subsec_micros();
 
             let dot_start = Instant::now();
-            self.manager.update_buffer::<f32>(&buffers.partial, &vec![0.0; (n as f32 / 64.0).ceil() as usize]);
-            self.manager.execute_kernel(
-                &kernels.dot, 
-                &bind_groups.error,
-                &groups
-            );
-            self.manager.retrieve_data(
-                &kernels.dot, 
-                &buffers.partial,
-                &mut partial_dot
-            );
-            let rs_new: f32 = partial_dot.iter().sum();
+            let rs_new = self.dot(&bind_groups.error, n as u32);
             dot_time += dot_start.elapsed().subsec_micros();
 
             let error = rs_new.sqrt() / scale;
@@ -231,9 +207,9 @@ impl SolvingAlgorithm for CGSolver {
                 return iter;
             }
 
-            let beta = rs_new / rs_old;
+            parameter.beta = rs_new / rs_old;
 
-            self.manager.update_buffer(&buffers.beta, &[beta]);
+            self.manager.update_uniform(&buffers.param, parameter);
 
             let assign_start = Instant::now();
             self.manager.execute_kernel(
@@ -252,6 +228,40 @@ impl SolvingAlgorithm for CGSolver {
     }
 }
 
+impl CGSolver {
+    fn dot(&self, bind_group: &wgpu::BindGroup,initial_size: u32) -> f32 {
+        let kernels = self.kernels.as_ref().expect("No kernels");
+        let bind_groups = self.bind_groups.as_ref().expect("No bind groups");
+        let buffers = self.gpu_state.as_ref().expect("No GPU State");
+
+        self.manager.execute_kernel(
+            &kernels.mul,
+            bind_group,
+            &[(initial_size as u32 + 63) / 64, 1, 1]
+        );
+
+        let mut n = initial_size;
+
+        while n > 1 {
+            self.manager.update_uniform(&buffers.reduction_size, n);
+            self.manager.execute_kernel(
+                &kernels.reduce, 
+                &bind_groups.reduce, 
+                &[(n as u32 + 63) / 64, 1, 1]);
+
+            n = n.div_ceil(64);
+        }
+        
+        let mut result = [0.0; 1];
+        self.manager.retrieve_data(
+            &kernels.reduce,
+            &buffers.partial,
+             &mut result);
+        result[0]
+
+    }
+}
+
 impl BindGroups {
     pub fn new(buffers: &GPUState, kernels: &Kernels, manager: &mut KernelManager) -> Self {
         Self {
@@ -262,26 +272,30 @@ impl BindGroups {
                     (3, &buffers.p),
                     (4, &buffers.ap)
                 ], &kernels.apply),
+            reduce: manager.create_bind(&vec![
+                    (0, &buffers.reduction_size),
+                    (1, &buffers.partial)
+                ], &kernels.reduce),
+            update_xr: manager.create_bind(&vec![
+                    (0, &buffers.p),
+                    (1, &buffers.ap),
+                    (2, &buffers.param),
+                    (3, &buffers.x),
+                    (4, &buffers.r),
+                ], &kernels.update_xr),
             dot: manager.create_bind(&vec![
                     (0, &buffers.p),
                     (1, &buffers.ap),
                     (2, &buffers.partial)
-                ], &kernels.dot),
-            update_xr: manager.create_bind(&vec![
-                    (0, &buffers.p),
-                    (1, &buffers.ap),
-                    (2, &buffers.alpha),
-                    (3, &buffers.x),
-                    (4, &buffers.r),
-                ], &kernels.update_xr),
+                ], &kernels.mul),
             error: manager.create_bind(&vec![
                     (0, &buffers.r),
                     (1, &buffers.r),
                     (2, &buffers.partial)
-                ], &kernels.dot),
+                ], &kernels.mul),
             update_p: manager.create_bind(&vec![
                     (0, &buffers.r),
-                    (1, &buffers.beta),
+                    (1, &buffers.param),
                     (2, &buffers.p)
                 ], &kernels.update_p), 
         }
@@ -299,22 +313,27 @@ impl Kernels {
                 .add_layout_buffer(4, false)
                 .create::<f32>(&n),
             
-            dot: manager.new_kernel(include_str!("../../../../../shaders/dot.wgsl"))
+            mul: manager.new_kernel(include_str!("../../../../../shaders/mul.wgsl"))
                 .add_layout_buffer(0, true)
                 .add_layout_buffer(1, true)
                 .add_layout_buffer(2, false)
-                .create::<f32>(&((n as f32 / 64.0).ceil() as usize)),
+                .create::<f32>(&n),
+
+            reduce: manager.new_kernel(include_str!("../../../../../shaders/partial_reduction.wgsl"))
+                .add_layout_uniform(0)
+                .add_layout_buffer(1, false)
+                .create::<f32>(&1),
 
             update_xr: manager.new_kernel(include_str!("../../../../../shaders/update_xr.wgsl"))
                 .add_layout_buffer(0, true)
                 .add_layout_buffer(1, true)
-                .add_layout_buffer(2, true)
+                .add_layout_uniform(2)
                 .add_layout_buffer(3, false)
                 .add_layout_buffer(4, false)
                 .create::<f32>(&n),
             update_p: manager.new_kernel(include_str!("../../../../../shaders/update_p.wgsl"))
                 .add_layout_buffer(0, true)
-                .add_layout_buffer(1, true)
+                .add_layout_uniform(1)
                 .add_layout_buffer(2, false)
                 .create::<f32>(&n),
         }
@@ -333,10 +352,10 @@ impl GPUState {
             p: manager.create_buffer::<f32>(&op.n, true, false),
             ap: manager.create_buffer::<f32>(&op.n, false, true),
 
-            partial: manager.create_buffer::<f32>(&((op.n as f32 / 64.0).ceil() as usize), true, true),
+            partial: manager.create_buffer::<f32>(&((op.n as f32 / 64.0).ceil() as usize), false, true),
 
-            alpha: manager.create_buffer::<f32>(&1, true, true),
-            beta: manager.create_buffer::<f32>(&1, true, true),
+            param: manager.create_uniform::<Parameter>(true, true),
+            reduction_size: manager.create_uniform::<u32>(true, false),
         }
     }
 }

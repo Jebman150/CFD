@@ -1,10 +1,7 @@
 @group(0) @binding(0)
-var<storage, read> a: array<f32>;
+var<uniform> n: u32;
 
 @group(0) @binding(1)
-var<storage, read> b: array<f32>;
-
-@group(0) @binding(2)
 var<storage, read_write> partial_sums: array<f32>;
 
 var<workgroup> cache: array<f32, 64>;
@@ -15,17 +12,14 @@ fn main(
     @builtin(local_invocation_id) local_id: vec3<u32>,
     @builtin(workgroup_id) workgroup_id: vec3<u32>,
 ) {
-
-    let i = global_id.x;
+    let global_i = global_id.x;
     let local_i = local_id.x;
 
-    let n = arrayLength(&a);
-
-    var value = 0.0;
-    if (i < n) {
-        value = a[i] * b[i];
+    if(global_i >= n) {
+        return;
     }
-    cache[local_i] = value;
+    cache[local_i] = partial_sums[global_i];
+
     workgroupBarrier();
 
     var stride = 32u;

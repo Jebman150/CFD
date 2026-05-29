@@ -45,7 +45,7 @@ impl Renderer {
         self.draw_cells(&state, &grid);
         self.draw_smoke_map(&state, &grid);
         //self.draw_hr_field(&state.smoke, grid, [50, 50]);
-        self.draw_velocity_debug(&state, &grid);
+        //self.draw_velocity_debug(&state, &grid);
     }
 
     fn clear(&self) {
