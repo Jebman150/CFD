@@ -13,13 +13,12 @@ pub trait LinearOperator {
 }
 
 pub struct PoissonOperator {
-    n: usize,
-    ndim: usize,
+    pub diag: Vec<f32>,
+    pub off_diag: Vec<f32>,
+    pub stride: Vec<u32>,
 
-    diag: Vec<f32>,
-    off_diag: Vec<f32>,
-
-    stride: Vec<usize>
+    pub n: usize,
+    pub ndim: usize,
 }
 
 impl PoissonOperator {
@@ -70,7 +69,7 @@ impl PoissonOperator {
         stride.push(1);
         for axis in 1..ndim {
             let last_stride = stride[axis-1];
-            let next_stride = last_stride * grid.get_size(axis-1);
+            let next_stride = last_stride * grid.get_size(axis-1) as u32;
             stride.push(next_stride);
         }
 
@@ -87,7 +86,7 @@ impl PoissonOperator {
         for n in 0..self.n {
             print!{"{}: " , n};
             for axis in (0..self.ndim).rev() {
-                let i = n.checked_sub(self.stride[axis]);
+                let i = n.checked_sub(self.stride[axis] as usize);
                 match i {
                     None => print!(" 0.0 "),
                     Some(j) => print!(" {:} ", self.off_diag[j * self.ndim + axis]),
@@ -102,8 +101,8 @@ impl PoissonOperator {
     }
 }
 
-impl LinearOperator for PoissonOperator {
-    fn apply(
+impl PoissonOperator {
+    pub fn apply(
         &self,
         x: &[f32],
         y: &mut [f32],
@@ -117,7 +116,7 @@ impl LinearOperator for PoissonOperator {
                 let coeff = self.off_diag[i * self.ndim + axis];
 
                 if coeff != 0.0 {
-                    let j = i + self.stride[axis];
+                    let j = i + self.stride[axis] as usize;
 
                     if j < self.n {
                         y[i] += coeff * x[j];

@@ -3,14 +3,6 @@ use crate::engine::grid::multi_index::{CellIndex, FaceIndex, FromIndex, TypedMul
 mod config;
 pub mod multi_index;
 
-
-
-enum FaceType {
-    SolidInternal,
-    Solid,
-    Fluid,
-}
-
 pub struct Grid2D {
     boundary_condition: Vec<config::BoundaryCondition>,
 

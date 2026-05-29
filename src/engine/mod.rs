@@ -10,10 +10,8 @@ use state::State2D;
 use crate::engine::{grid::multi_index::{CellIndex, FaceIndex}, solver::linear_operator::PoissonOperator, state::field::{CellType, Field}};
 
 pub struct Engine {
-    solver: Solver,
+    solver: Solver<solver::gpu_solver::cg_solver::CGSolver>,
     pub grid: Grid2D,
-
-    laplacian: PoissonOperator,
 
     dt: f32,
     density: f32,
@@ -24,9 +22,8 @@ impl Engine {
         let grid_topology = Grid2D::new(config_path.to_owned() + "grid_topology.toml");
 
         Self {
-            solver: Solver::new(config_path.to_owned() + "solving_algorithm.toml").unwrap(),
+            solver: Solver::new(config_path.to_owned() + "solving_algorithm.toml"),
             grid: grid_topology,
-            laplacian: PoissonOperator::empty(),
             dt: 0.01,
             density: 1.0,
         }
@@ -37,7 +34,8 @@ impl Engine {
 
         self.set_solid_obstacle(state);
 
-        self.laplacian = PoissonOperator::new(&self.grid, &state.cell_types);
+        let laplacian = PoissonOperator::new(&self.grid, &state.cell_types);
+        self.solver.set_operator(laplacian);
     }
 
 
@@ -131,7 +129,7 @@ impl Engine {
         let cleaned_rhs: Vec<f32> = rhs.into_iter().map(|x| x - mean).collect();
 
         let mut pressure = vec![0.0; divergence.len()]; 
-        self.solver.solve(&self.laplacian, &mut pressure, &cleaned_rhs);
+        self.solver.solve(&mut pressure, &cleaned_rhs);
 
         for cell_idx in self.grid.cell_iter() {
             state.pressure.set(&self.grid, &cell_idx, pressure[self.grid.linearize_inner_cell_index(&cell_idx)]);

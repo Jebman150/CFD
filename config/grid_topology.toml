@@ -1,4 +1,4 @@
-grid_size = [80, 40]
+grid_size = [150, 150]
 delta_x = 0.3
 
 [[boundary_condition]]

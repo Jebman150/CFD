@@ -1,50 +1,68 @@
-mod algorithms;
+pub mod gpu_solver;
+pub mod cpu_solver;
 pub mod linear_operator;
 
-use std::fs;
+use std::{fs, time::Instant};
 use serde::Deserialize;
 use anyhow::Result;
 
-#[derive(Deserialize)]
-pub enum Algorithm {
-    CGSolver,
-}
+use crate::engine::solver::linear_operator::PoissonOperator;
 
 #[derive(Deserialize)]
 struct Config {
-    algorithm: Algorithm,
-    tolerance: f32,
-    maxit: f32,
-}
-
-#[derive(Deserialize)]
-pub struct Solver {
-    algorithm: Algorithm,
     tolerance: f32,
     maxit: usize,
 }
 
-impl Solver {
-    pub fn new(config: String) -> Result<Self> {
-        let contents = fs::read_to_string(config)?;
-        let config: Self = toml::from_str(&contents)?;
+pub trait SolvingAlgorithm {
+    fn new() -> Self;
+    fn init(&mut self, op: linear_operator::PoissonOperator);
+    fn solve(
+        &self,
+        x: &mut [f32],
+        b: &[f32],
+        maxit: usize,
+        tolerance: f32
+    ) -> usize;
+}
+
+pub struct Solver<Algo: SolvingAlgorithm> {
+    config: Config,
+    solver: Algo,
+}
+
+impl<Algo: SolvingAlgorithm> Solver<Algo> {
+    pub fn new(config: String) -> Self {
+        Self {
+            config: Self::read_config(config).expect("Could not read solving config file"),
+            solver: Algo::new(),
+        }
+    }
+
+    fn read_config(file: String) -> Result<Config> {
+        let contents = fs::read_to_string(file)?;
+        let config: Config = toml::from_str(&contents)?;
         Ok(config)
     }
 
-    pub fn solve<A: linear_operator::LinearOperator> (
+    pub fn set_operator(&mut self, op: PoissonOperator) {
+        self.solver.init(op);
+    }
+
+    pub fn solve (
         &self,
-        op: &A,
         x: &mut [f32],
         d: &[f32]
     ) {
-        match self.algorithm  {
-            Algorithm::CGSolver => algorithms::cg_solver(
-                op,
-                x,
-                d,
-                self.maxit,
-                self.tolerance
-                )
-        };
+        let begin = Instant::now();
+        let iteration = self.solver.solve(
+            x, 
+            d, 
+            self.config.maxit, 
+            self.config.tolerance
+        );
+
+        println!("Converged in {} iterations", iteration);
+        println!("Solved in {} micros", begin.elapsed().subsec_micros());
     }
 }
