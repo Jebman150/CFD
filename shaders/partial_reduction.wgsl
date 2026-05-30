@@ -14,11 +14,11 @@ fn main(
 ) {
     let global_i = global_id.x;
     let local_i = local_id.x;
+    cache[local_i] = 0.0;
 
-    if(global_i >= n) {
-        return;
+    if(global_i < n) {
+        cache[local_i] = partial_sums[global_i];
     }
-    cache[local_i] = partial_sums[global_i];
 
     workgroupBarrier();
 

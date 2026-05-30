@@ -10,6 +10,10 @@ fn dot(v: &[f32], w: &[f32]) -> f32 {
     v.iter().zip(w.iter()).map(|(x, y)| x * y).sum()
 }
 
+fn mul(v: &[f32], w: &[f32]) -> Vec<f32> {
+    v.iter().zip(w.iter()).map(|(x, y)| x * y).collect()
+}
+
 pub struct CGSolver { 
     op: Option<PoissonOperator>
 }
@@ -63,10 +67,12 @@ impl SolvingAlgorithm for CGSolver {
 
             let op_start = Instant::now();
             operator.apply(&p, &mut ap);
+            println!("Ap: {:?}", ap);
             operator_time += op_start.elapsed().subsec_micros();
 
             let dot_start = Instant::now();
             let denom = dot(&p, &ap);
+            println!("pAp: {:?}", denom);
             dot_time += dot_start.elapsed().subsec_micros();
 
             if denom.abs() < 1e-20 {
@@ -79,14 +85,18 @@ impl SolvingAlgorithm for CGSolver {
             let assign_start = Instant::now();
             for i in 0..n {
                 x[i] += alpha * p[i];
-            //    r[i] -= alpha * ap[i];
+                r[i] -= alpha * ap[i];
             }
-            r = r.iter().zip(ap.iter()).map(|(r, ap)| r - alpha * ap).collect();
+            println!("x updated: {:?}", x);
+            println!("r update: {:?}", r);
             assign_time += assign_start.elapsed().subsec_micros();
 
             let dot_start = Instant::now();
             let rs_new = dot(&r, &r);
+            let test: Vec<f32> = r.iter().map(|r| r*r).collect();
             dot_time += dot_start.elapsed().subsec_micros();
+            println!("mul: {:?}", test);
+            println!("dot2: {:?}", rs_new);
 
             let error = rs_new.sqrt() / scale;
 
@@ -98,14 +108,18 @@ impl SolvingAlgorithm for CGSolver {
             }
 
             let beta = rs_new / rs_old;
+            rs_old = rs_new;
 
             let assign_start = Instant::now();
             for i in 0..n {
                 p[i] = r[i] + beta * p[i];
             }
+
+            println!("p update: {:?}", p);
+
             assign_time += assign_start.elapsed().subsec_micros();
 
-            rs_old = rs_new;
+            break;
         }
         maxit
     }

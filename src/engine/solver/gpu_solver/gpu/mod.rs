@@ -1,4 +1,4 @@
-use wgpu::{util::DeviceExt, wgc::command::CopySide::Source};
+use wgpu::{util::DeviceExt, wgt::CommandEncoderDescriptor};
 
 pub struct Kernel {
     staging_buffer: wgpu::Buffer,
@@ -7,11 +7,7 @@ pub struct Kernel {
 }
 
 impl Kernel {
-    pub fn execute(&self, work_size: &[u32; 3], bind_group: &wgpu::BindGroup, device: &wgpu::Device, queue: &wgpu::Queue) {
-        let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
-            label: Some("Command Encoder"),
-        });
-
+    pub fn execute(&self, work_size: &[u32; 3], bind_group: &wgpu::BindGroup, encoder: &mut wgpu::CommandEncoder) {
         {
             let mut compute_pass =
                 encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
@@ -25,8 +21,6 @@ impl Kernel {
             // One invocation per element
             compute_pass.dispatch_workgroups(work_size[0], work_size[1], work_size[2]);
         }
-
-        queue.submit(Some(encoder.finish()));
     }
 
     pub fn retrieve<T: bytemuck::Pod>(&self, buffer: &wgpu::Buffer, target: &mut [T], device: &wgpu::Device, queue: &wgpu::Queue) {
@@ -269,12 +263,14 @@ impl KernelManager {
         }
     }
 
-    pub fn execute_kernel(&self, kernel: &Kernel, bind_group: &wgpu::BindGroup, work_size: &[u32; 3]) {
-        kernel.execute(
-            work_size,
-            bind_group,
-            &self.device,
-            &self.queue);
+    pub fn get_encoder(&self) -> wgpu::CommandEncoder {
+        self.device.create_command_encoder(&CommandEncoderDescriptor {
+            label: Some("Command encoder")
+        })
+    }
+
+    pub fn consume(&self, encoder: wgpu::CommandEncoder) {
+        self.queue.submit([encoder.finish()]);
     }
 
     pub fn retrieve_data<T: bytemuck::Pod>(

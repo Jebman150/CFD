@@ -4,10 +4,12 @@ var<storage, read> r: array<f32>;
 struct Parameter {
     alpha: f32,
     beta: f32,
+    rs: f32,
+    pad: f32
 };
 
 @group(0) @binding(1)
-var<uniform> param: Parameter;
+var<storage, read> param: Parameter;
 
 @group(0) @binding(2)
 var<storage, read_write> p: array<f32>;

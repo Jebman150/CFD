@@ -1,13 +1,13 @@
-grid_size = [150, 150]
+grid_size = [100, 100]
 delta_x = 0.3
 
 [[boundary_condition]]
 condition_type = "neumann"
-value = 150
+value = 15
 
 [[boundary_condition]]
 condition_type = "neumann"
-value = 150
+value = 15
 
 [[boundary_condition]]
 condition_type = "neumann"

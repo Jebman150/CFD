@@ -63,6 +63,7 @@ async fn main() {
     println!("------- Main Loop -------");
     while simulation.is_running {
         simulation_step(&mut simulation.state, &simulation.engine);
+        //break;
 
         simulation.renderer.update(&simulation.state, &simulation.engine.grid);
 

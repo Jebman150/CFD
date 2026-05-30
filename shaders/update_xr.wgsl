@@ -7,10 +7,12 @@ var<storage, read> ap: array<f32>;
 struct Parameter {
     alpha: f32,
     beta: f32,
+    rs: f32,
+    pad: f32
 };
 
 @group(0) @binding(2)
-var<uniform> param: Parameter;
+var<storage, read> param: Parameter;
 
 @group(0) @binding(3)
 var<storage, read_write> x: array<f32>;
@@ -26,5 +28,5 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
     }
     
     x[i] += param.alpha * p[i];
-    r[i] -= param.beta * ap[i];
+    r[i] -= param.alpha * ap[i];
 }
