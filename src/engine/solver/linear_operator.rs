@@ -12,6 +12,7 @@ pub trait LinearOperator {
     pub fn apply_lower(&self, x: &[f32]) -> Vec<f32>;*/
 }
 
+#[derive(Clone)]
 pub struct PoissonOperator {
     pub diag: Vec<f32>,
     pub off_diag: Vec<f32>,

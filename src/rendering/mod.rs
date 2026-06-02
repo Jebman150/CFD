@@ -75,7 +75,7 @@ impl Renderer {
             let pos_x = self.viewport_pos.0 + (cell_idx.idx[0] as f32) * self.cellsize.0 + self.padding;
             let pos_y = self.viewport_pos.1 + (cell_idx.idx[1] as f32) * self.cellsize.1 + self.padding;
 
-            let color = Self::scale_color(&self.visuals.smoke_color, state.smoke.data[grid.linearize_cell_index(&cell_idx)]);
+            let color = Self::scale_color(&self.visuals.smoke_color, state.smoke.data[grid.linearize_cell_index(&cell_idx)] as f32);
 
             draw_rectangle(pos_x, pos_y, cell_width, cell_height, color);
         }
@@ -105,14 +105,14 @@ impl Renderer {
 
                 // map to grid physical space
                 let pos = [
-                    u * nx * grid.get_delta_x(),
-                    v * ny * grid.get_delta_x(),
+                    (u * nx) as f32 * grid.get_delta_x(),
+                    (v * ny) as f32 * grid.get_delta_x(),
                 ];
 
                 let pos_x = self.viewport_pos.0 + u * self.viewport_size.0;
                 let pos_y = self.viewport_pos.1 + v * self.viewport_size.1;
 
-                let value = data.sample(grid, pos);
+                let value = data.sample(grid, pos) as f32;
 
                 let color = Self::scale_color(&self.visuals.smoke_color, value);
 
@@ -137,7 +137,7 @@ impl Renderer {
                 let pos_x = self.viewport_pos.0 + (face_idx.idx[0] as f32) * self.cellsize.0 + offset.0 + self.padding;
                 let pos_y = self.viewport_pos.1 + (face_idx.idx[1] as f32) * self.cellsize.1 + offset.1 + self.padding;
 
-                let bar_length = state.velocity[axis].get(&grid, &face_idx) * 10.0;
+                let bar_length = (state.velocity[axis].get(&grid, &face_idx) * 10.0) as f32;
 
                 let bar_height = 
                 if axis == 0 {

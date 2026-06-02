@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use wgpu::{util::DeviceExt, wgt::CommandEncoderDescriptor};
 
 pub struct Kernel {
@@ -24,6 +26,7 @@ impl Kernel {
     }
 
     pub fn retrieve<T: bytemuck::Pod>(&self, buffer: &wgpu::Buffer, target: &mut [T], device: &wgpu::Device, queue: &wgpu::Queue) {
+        let buffer_size = (target.len() * std::mem::size_of::<T>()) as wgpu::BufferAddress;
         let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
             label: Some("Command Encoder"),
         });
@@ -33,12 +36,12 @@ impl Kernel {
             0,
             &self.staging_buffer,
             0,
-            self.staging_buffer.size(),
+            buffer_size,
         );
 
         queue.submit(Some(encoder.finish()));
 
-        let buffer_slice = self.staging_buffer.slice(..);
+        let buffer_slice = self.staging_buffer.slice(..buffer_size);
 
         buffer_slice.map_async(wgpu::MapMode::Read, |_| {});
 
@@ -270,7 +273,13 @@ impl KernelManager {
     }
 
     pub fn consume(&self, encoder: wgpu::CommandEncoder) {
-        self.queue.submit([encoder.finish()]);
+        let begin = Instant::now();
+        let cb = encoder.finish();
+        //println!("Finish time: {}", begin.elapsed().subsec_micros());
+
+        let sub = Instant::now();
+        self.queue.submit(Some(cb));
+        //println!("Submission time: {}", sub.elapsed().subsec_micros());
     }
 
     pub fn retrieve_data<T: bytemuck::Pod>(

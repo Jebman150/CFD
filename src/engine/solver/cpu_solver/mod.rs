@@ -67,12 +67,12 @@ impl SolvingAlgorithm for CGSolver {
 
             let op_start = Instant::now();
             operator.apply(&p, &mut ap);
-            println!("Ap: {:?}", ap);
+            //println!("Ap: {:?}", ap);
             operator_time += op_start.elapsed().subsec_micros();
 
             let dot_start = Instant::now();
             let denom = dot(&p, &ap);
-            println!("pAp: {:?}", denom);
+            //println!("pAp: {:?}", denom);
             dot_time += dot_start.elapsed().subsec_micros();
 
             if denom.abs() < 1e-20 {
@@ -87,16 +87,16 @@ impl SolvingAlgorithm for CGSolver {
                 x[i] += alpha * p[i];
                 r[i] -= alpha * ap[i];
             }
-            println!("x updated: {:?}", x);
-            println!("r update: {:?}", r);
+            //println!("x updated: {:?}", x);
+            //println!("r update: {:?}", r);
             assign_time += assign_start.elapsed().subsec_micros();
 
             let dot_start = Instant::now();
             let rs_new = dot(&r, &r);
             let test: Vec<f32> = r.iter().map(|r| r*r).collect();
             dot_time += dot_start.elapsed().subsec_micros();
-            println!("mul: {:?}", test);
-            println!("dot2: {:?}", rs_new);
+            //println!("mul: {:?}", test);
+            //println!("dot2: {:?}", rs_new);
 
             let error = rs_new.sqrt() / scale;
 
@@ -115,11 +115,11 @@ impl SolvingAlgorithm for CGSolver {
                 p[i] = r[i] + beta * p[i];
             }
 
-            println!("p update: {:?}", p);
+            //println!("p update: {:?}", p);
 
             assign_time += assign_start.elapsed().subsec_micros();
 
-            break;
+            //break;
         }
         maxit
     }

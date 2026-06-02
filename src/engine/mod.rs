@@ -10,7 +10,7 @@ use state::State2D;
 use crate::engine::{grid::multi_index::{CellIndex, FaceIndex}, solver::linear_operator::PoissonOperator, state::field::{CellType, Field}};
 
 pub struct Engine {
-    solver: Solver<solver::gpu_solver::cg_solver::CGSolver>,
+    solver: Solver<solver::cpu_solver::CGSolver>,
     pub grid: Grid2D,
 
     dt: f32,
