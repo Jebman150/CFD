@@ -1,5 +1,5 @@
 grid_size = [20, 10]
-delta_x = 0.2
+delta_x = 1.0
 
 [[boundary_condition]]
 condition_type = "neumann"

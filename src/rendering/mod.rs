@@ -1,8 +1,29 @@
 use macroquad::prelude::*;
 
+use crate::{rendering::parameter::{ColorGradient, VisualParameter}, simulation::data::{SimulationData, field::{CellType, Field}, grid::{Grid2D, multi_index::CellIndex}}};
+
 mod parameter;
 
-use crate::{engine::{grid::{Grid2D, multi_index::CellIndex}, state::{State2D, field::Field}}, rendering::parameter::VisualParameter};
+#[derive(Clone)]
+pub struct RenderSettings {
+    pub render_cells: bool,
+    pub render_hr_field: bool,
+    pub render_velocity_debug: bool,
+    pub render_divergence: bool,
+    pub render_pressure: bool,
+}
+
+impl Default for RenderSettings {
+    fn default() -> Self {
+        Self {
+            render_cells: true,
+            render_hr_field: Default::default(),
+            render_velocity_debug: true,
+            render_divergence: false,
+            render_pressure: false,
+        }
+    }
+}
 
 pub struct Renderer {
     window_size: (f32, f32),
@@ -20,19 +41,25 @@ impl Renderer {
             fluid_cell: Color::from_rgba(30, 30, 30, 255),
             solid_cell: Color::from_rgba(10, 10, 10, 255),
             smoke_color: Color::from_rgba(200, 200, 200, 200),
+            divergence: ColorGradient {
+                low: Color::from_rgba(0, 0, 255, 255),
+                high: Color::from_rgba(255, 0, 0, 255),
+                low_val: -500.0,
+                high_val: 500.0,
+            }
         };
 
         Self {
             window_size: (screen_width(), screen_height()),
-            viewport_size: (screen_width() - 40.0, screen_height() - 40.0),
-            viewport_pos: (20.0, 20.0),
+            viewport_size: (screen_width() - 200.0, screen_height() - 40.0),
+            viewport_pos: (180.0, 20.0),
             cellsize: (5.0, 5.0),
             padding: 0.0,
             visuals: params
         }
     }
 
-    pub fn update(&mut self, state: &State2D, grid: &Grid2D) {
+    pub fn draw(&mut self, state: &SimulationData, grid: &Grid2D, settings: &RenderSettings) {
         self.clear();
 
         self.window_size = (screen_width(), screen_height());
@@ -42,25 +69,37 @@ impl Renderer {
         self.cellsize.1 /= grid.get_outer_size()[1] as f32;
 
 
-        self.draw_cells(&state, &grid);
-        self.draw_smoke_map(&state, &grid);
-        //self.draw_hr_field(&state.smoke, grid, [50, 50]);
-        //self.draw_velocity_debug(&state, &grid);
+        if settings.render_cells {
+            self.draw_cells(state, grid);
+        }
+        if settings.render_hr_field {
+            self.draw_hr_field(&state.smoke, grid, [50, 50]);
+        }
+        if settings.render_velocity_debug {
+            self.draw_velocity_debug(state, grid);
+        }
+        if settings.render_divergence {
+            self.draw_divergence(state, grid);
+        }
+        if settings.render_pressure {
+            self.draw_pressure(state, grid);
+        }
+        //self.draw_smoke_map(&state, &grid);
     }
 
     fn clear(&self) {
         clear_background(BLACK);
     }
 
-    fn draw_cells(&self, state: &State2D, grid: &Grid2D) {
-        let cell_width = self.cellsize.0 - self.padding * 2.0;
-        let cell_height = self.cellsize.1 - self.padding * 2.0;
+    fn draw_cells(&self, state: &SimulationData, grid: &Grid2D) {
+        let cell_width = self.cellsize.0 - self.padding * 2.0 - 1.0;
+        let cell_height = self.cellsize.1 - self.padding * 2.0 - 1.0;
         for cell_idx in grid.total_cell_iter() {
             let pos_x = self.viewport_pos.0 + (cell_idx.idx[0] as f32) * self.cellsize.0 + self.padding;
             let pos_y = self.viewport_pos.1 + (cell_idx.idx[1] as f32) * self.cellsize.1 + self.padding;
 
             let color = 
-            if state.cell_types.data[grid.linearize_cell_index(&cell_idx)] == crate::engine::state::field::CellType::Solid {
+            if state.cell_types.data[grid.linearize_cell_index(&cell_idx)] == CellType::Solid {
                 self.visuals.solid_cell
             } else { self.visuals.fluid_cell };
 
@@ -68,14 +107,40 @@ impl Renderer {
         }
     }
 
-    fn draw_smoke_map(&self, state: &State2D, grid: &Grid2D) {
-        let cell_width = self.cellsize.0 - self.padding * 2.0;
-        let cell_height = self.cellsize.1 - self.padding * 2.0;
+    fn draw_smoke_map(&self, state: &SimulationData, grid: &Grid2D) {
+        let cell_width = self.cellsize.0 - self.padding * 2.0 - 1.0;
+        let cell_height = self.cellsize.1 - self.padding * 2.0 - 1.0;
         for cell_idx in grid.total_cell_iter() {
             let pos_x = self.viewport_pos.0 + (cell_idx.idx[0] as f32) * self.cellsize.0 + self.padding;
             let pos_y = self.viewport_pos.1 + (cell_idx.idx[1] as f32) * self.cellsize.1 + self.padding;
 
             let color = Self::scale_color(&self.visuals.smoke_color, state.smoke.data[grid.linearize_cell_index(&cell_idx)] as f32);
+
+            draw_rectangle(pos_x, pos_y, cell_width, cell_height, color);
+        }
+    }
+
+    fn draw_divergence(&self, state: &SimulationData, grid: &Grid2D) {
+        let cell_width = self.cellsize.0 - self.padding * 2.0 - 1.0;
+        let cell_height = self.cellsize.1 - self.padding * 2.0 - 1.0;
+        for cell_idx in grid.total_cell_iter() {
+            let pos_x = self.viewport_pos.0 + (cell_idx.idx[0] as f32) * self.cellsize.0 + self.padding;
+            let pos_y = self.viewport_pos.1 + (cell_idx.idx[1] as f32) * self.cellsize.1 + self.padding;
+
+            let color = self.visuals.divergence.get(state.divergence.data[grid.linearize_cell_index(&cell_idx)] as f32);
+
+            draw_rectangle(pos_x, pos_y, cell_width, cell_height, color);
+        }
+    }
+
+    fn draw_pressure(&self, state: &SimulationData, grid: &Grid2D) {
+        let cell_width = self.cellsize.0 - self.padding * 2.0 - 1.0;
+        let cell_height = self.cellsize.1 - self.padding * 2.0 - 1.0;
+        for cell_idx in grid.total_cell_iter() {
+            let pos_x = self.viewport_pos.0 + (cell_idx.idx[0] as f32) * self.cellsize.0 + self.padding;
+            let pos_y = self.viewport_pos.1 + (cell_idx.idx[1] as f32) * self.cellsize.1 + self.padding;
+
+            let color = self.visuals.divergence.get(state.pressure.data[grid.linearize_cell_index(&cell_idx)] as f32);
 
             draw_rectangle(pos_x, pos_y, cell_width, cell_height, color);
         }
@@ -87,8 +152,8 @@ impl Renderer {
         grid: &Grid2D,
         res: [usize; 2],
     ) {
-        let nx = grid.get_size(0) as f32;
-        let ny = grid.get_size(1) as f32;
+        let nx = grid.get_outer_size()[0] as f32;
+        let ny = grid.get_outer_size()[1] as f32;
 
         let dx = 1.0 / res[0] as f32;
         let dy = 1.0 / res[1] as f32;
@@ -105,8 +170,8 @@ impl Renderer {
 
                 // map to grid physical space
                 let pos = [
-                    (u * nx) as f32 * grid.get_delta_x(),
-                    (v * ny) as f32 * grid.get_delta_x(),
+                    (u * nx) as f32 * grid.get_delta_x(0),
+                    (v * ny) as f32 * grid.get_delta_x(1),
                 ];
 
                 let pos_x = self.viewport_pos.0 + u * self.viewport_size.0;
@@ -121,7 +186,7 @@ impl Renderer {
         }
     }
 
-    fn draw_velocity_debug(&self, state: &State2D, grid: &Grid2D) {
+    fn draw_velocity_debug(&self, state: &SimulationData, grid: &Grid2D) {
         let bar_thickness: f32 = 5.0;
         for axis in 0..2 {
             let offset =
@@ -137,7 +202,7 @@ impl Renderer {
                 let pos_x = self.viewport_pos.0 + (face_idx.idx[0] as f32) * self.cellsize.0 + offset.0 + self.padding;
                 let pos_y = self.viewport_pos.1 + (face_idx.idx[1] as f32) * self.cellsize.1 + offset.1 + self.padding;
 
-                let bar_length = (state.velocity[axis].get(&grid, &face_idx) * 10.0) as f32;
+                let bar_length = (state.velocity[axis].get(&grid, &face_idx) * 0.1) as f32;
 
                 let bar_height = 
                 if axis == 0 {
