@@ -21,31 +21,35 @@ pub fn apply_poisson(
 ) {
     y.fill(0.0);
 
+    let dx = 0.01;
+    let diag = 4.0 / (dx * dx);
+    let offdiag = -1.0 / (dx * dx);
+
     for j in 0..nx {
         for i in 0..nx {
             let idx = j * nx + i;
 
             // Center node contribution (4 * x_i)
-            y[idx] += 4.0 * x[idx];
+            y[idx] += diag * x[idx];
 
             // Left neighbor (i - 1)
             if i > 0 {
-                y[idx] -= x[idx - 1];
+                y[idx] += offdiag * x[idx - 1];
             }
 
             // Right neighbor (i + 1)
             if i + 1 < nx {
-                y[idx] -= x[idx + 1];
+                y[idx] += offdiag * x[idx + 1];
             }
 
             // Bottom neighbor (j - 1)
             if j > 0 {
-                y[idx] -= x[idx - nx];
+                y[idx] += offdiag * x[idx - nx];
             }
 
             // Top neighbor (j + 1)
             if j + 1 < nx {
-                y[idx] -= x[idx + nx];
+                y[idx] += offdiag * x[idx + nx];
             }
         }
     }

@@ -13,7 +13,7 @@ impl SimulationOperator for DivergenceComputation {
     ) -> Result<u128, String> {
         let start = Instant::now();
 
-        for cell_idx in context.cell_iter() {
+        for cell_idx in context.total_cell_iter() {
             let mut sum = 0.0;
 
             for axis in 0..2 {
@@ -37,7 +37,7 @@ impl SimulationOperator for DivergenceComputation {
                     ));
                 }
 
-                sum += (left - right) / context.get_delta_x(axis);
+                sum += (right - left) / context.get_delta_x(axis);
                 if !sum.is_finite() {
                     return Err(format!(
                         "Divergence overflow: cell {:?}, axis {}",
@@ -54,5 +54,43 @@ impl SimulationOperator for DivergenceComputation {
 
     fn get_name(&self) -> &'static str {
         "Divergence computation"
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::simulation::data::{SimulationData, grid::{Grid2D, multi_index::{CellIndex, FaceIndex, FromIndex}}};
+
+    fn uniform_empty_grid() -> (SimulationData, Grid2D) {
+        let topology = Grid2D::new([3, 3], [0.05, 0.1]);
+        let data = SimulationData::new(&topology);
+        (data, topology)
+    }
+
+    #[test]
+    fn test_divergence_computation_null() {
+        let (mut empty_grid, mut topology) = uniform_empty_grid();
+        let mut test_operator = DivergenceComputation{};
+
+        test_operator.execute(&mut empty_grid, &mut topology).unwrap();
+
+        for d in empty_grid.divergence.data {
+            assert_eq!(d, 0.0);
+        }
+    }
+
+    #[test]
+    fn test_divergence_computation() {
+        let (mut test_grid, mut topology) = uniform_empty_grid();
+        test_grid.velocity[0].set(&topology, &FaceIndex::from_index([1, 1]), 1.0);
+        test_grid.velocity[0].set(&topology, &FaceIndex::from_index([2, 1]), 1.0);
+        let mut test_operator = DivergenceComputation{};
+
+        test_operator.execute(&mut test_grid, &mut topology).unwrap();
+
+        assert_eq!(*test_grid.divergence.get(&topology, &CellIndex::from_index([0, 1])), -1.0 / topology.get_delta_x(0));
+        assert_eq!(*test_grid.divergence.get(&topology, &CellIndex::from_index([1, 1])), 0.0);
+        assert_eq!(*test_grid.divergence.get(&topology, &CellIndex::from_index([2, 1])), 1.0 / topology.get_delta_x(0));
     }
 }

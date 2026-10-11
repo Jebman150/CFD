@@ -1,4 +1,4 @@
-use crate::simulation::{data::{SimulationData, field::Field, grid::{Grid2D, multi_index::FaceIndex}}, pipeline::{SimulationPipeline, operator::SimulationOperator}, solver::{Solver, cpu_solver::CGSolver}, solver_registry::{SolverDescriptor, SolverRegistry}};
+use crate::simulation::{data::{SimulationData, grid::Grid2D}, pipeline::SimulationPipeline, solver_registry::{SolverDescriptor, SolverRegistry}};
 use colored::*;
 
 pub mod solver;
@@ -31,14 +31,13 @@ impl SimulationController {
         );
 
         let mut pipeline = SimulationPipeline::new();
-        pipeline//.add_step(pipeline::operator::advect_velocities())
+        pipeline.add_step(pipeline::operator::advect_velocities())
             //.add_step(pipeline::operator::apply_boundary_condition())
             .add_step(pipeline::operator::apply_internal_condition())
             .add_step(pipeline::operator::compute_divergence())
             .add_step(pipeline::operator::solve_pressure())
             .add_step(pipeline::operator::project_velocities())
-            .add_step(pipeline::operator::apply_internal_condition())
-            .add_step(pipeline::operator::compute_divergence());
+            .add_step(pipeline::operator::apply_internal_condition());
 
         let topology = data::grid::Grid2D::new([100, 100], [0.01, 0.01]);
 

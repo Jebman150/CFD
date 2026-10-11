@@ -1,12 +1,13 @@
 use macroquad::prelude::*;
 
-use crate::{rendering::parameter::{ColorGradient, VisualParameter}, simulation::data::{SimulationData, field::{CellType, Field}, grid::{Grid2D, multi_index::CellIndex}}};
+use crate::{rendering::parameter::{ColorGradient, VisualParameter}, simulation::data::{SimulationData, field::{CellType, Field}, grid::{Grid2D, multi_index::{CellIndex, FromIndex}}}};
 
 mod parameter;
 
 #[derive(Clone)]
 pub struct RenderSettings {
     pub render_cells: bool,
+    pub render_streamlines: bool,
     pub render_hr_field: bool,
     pub render_velocity_debug: bool,
     pub render_divergence: bool,
@@ -17,6 +18,7 @@ impl Default for RenderSettings {
     fn default() -> Self {
         Self {
             render_cells: true,
+            render_streamlines: false,
             render_hr_field: Default::default(),
             render_velocity_debug: true,
             render_divergence: false,
@@ -46,6 +48,12 @@ impl Renderer {
                 high: Color::from_rgba(255, 0, 0, 255),
                 low_val: -500.0,
                 high_val: 500.0,
+            },
+            pressure: ColorGradient {
+                low: Color::from_rgba(0, 0, 255, 255),
+                high: Color::from_rgba(255, 0, 0, 255),
+                low_val: -5.0,
+                high_val: 5.0,
             }
         };
 
@@ -63,7 +71,7 @@ impl Renderer {
         self.clear();
 
         self.window_size = (screen_width(), screen_height());
-        self.viewport_size = (screen_width() - 40.0, screen_height() - 40.0);
+        self.viewport_size = (screen_width() - 200.0, screen_height() - 40.0);
         self.cellsize = self.viewport_size;
         self.cellsize.0 /= grid.get_outer_size()[0] as f32;
         self.cellsize.1 /= grid.get_outer_size()[1] as f32;
@@ -71,6 +79,9 @@ impl Renderer {
 
         if settings.render_cells {
             self.draw_cells(state, grid);
+        }
+        if settings.render_streamlines {
+            self.draw_streamlines(state, grid);
         }
         if settings.render_hr_field {
             self.draw_hr_field(&state.smoke, grid, [50, 50]);
@@ -140,7 +151,7 @@ impl Renderer {
             let pos_x = self.viewport_pos.0 + (cell_idx.idx[0] as f32) * self.cellsize.0 + self.padding;
             let pos_y = self.viewport_pos.1 + (cell_idx.idx[1] as f32) * self.cellsize.1 + self.padding;
 
-            let color = self.visuals.divergence.get(state.pressure.data[grid.linearize_cell_index(&cell_idx)] as f32);
+            let color = self.visuals.pressure.get(state.pressure.data[grid.linearize_cell_index(&cell_idx)] as f32);
 
             draw_rectangle(pos_x, pos_y, cell_width, cell_height, color);
         }
@@ -202,7 +213,7 @@ impl Renderer {
                 let pos_x = self.viewport_pos.0 + (face_idx.idx[0] as f32) * self.cellsize.0 + offset.0 + self.padding;
                 let pos_y = self.viewport_pos.1 + (face_idx.idx[1] as f32) * self.cellsize.1 + offset.1 + self.padding;
 
-                let bar_length = (state.velocity[axis].get(&grid, &face_idx) * 0.1) as f32;
+                let bar_length = (state.velocity[axis].get(&grid, &face_idx) * 10.0) as f32;
 
                 let bar_height = 
                 if axis == 0 {
@@ -222,6 +233,40 @@ impl Renderer {
             }
 
             
+        }
+    }
+
+    fn draw_streamlines(&self, state: &SimulationData, grid: &Grid2D) {
+        let line_thickness: f32 = 2.0;
+
+        let nx = grid.get_outer_size()[0];
+        let ny = grid.get_outer_size()[1];
+
+        let dx = 1.0 / nx as f32;
+        let dy = 1.0 / ny as f32;
+
+        let dt = 0.01;
+
+        for x in 0..nx {
+            for y in 0..ny {
+                let cell_idx = CellIndex::from_index([x, y]);
+                let x_faces = grid.get_face_indices(&cell_idx, 0);
+                let vel_x = (state.velocity[0].get(grid, &x_faces[0]) + state.velocity[0].get(grid, &x_faces[1])) * 0.5;
+                let y_faces = grid.get_face_indices(&cell_idx, 1);
+                let vel_y = (state.velocity[1].get(grid, &y_faces[0]) + state.velocity[1].get(grid, &y_faces[1])) * 0.5;
+
+                let line_start = (
+                    self.viewport_pos.0 + (x as f32 * dx + 0.5 * dx) * self.viewport_size.0 + self.padding,
+                    self.viewport_pos.1 + (y as f32 * dy + 0.5 * dy) * self.viewport_size.1 + self.padding,
+                );
+
+                let line_end = (
+                    self.viewport_pos.0 + (x as f32 * dx + vel_x * dt + 0.5 * dx) * self.viewport_size.0 + self.padding,
+                    self.viewport_pos.1 + (y as f32 * dy + vel_y * dt + 0.5 * dy) * self.viewport_size.1 + self.padding,
+                );
+
+                draw_line(line_start.0, line_start.1, line_end.0, line_end.1, line_thickness, GREEN);
+            }  
         }
     }
 

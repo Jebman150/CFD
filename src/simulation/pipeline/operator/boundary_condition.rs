@@ -63,7 +63,7 @@ impl ApplyInteriorBoundaryCondition {
         let mut face_index = FaceIndex::from_index([50, 50]);
         face_index.axis = 0;
 
-        data.velocity[0].set(context, &face_index, 0.1);
+        data.velocity[0].set(context, &face_index, 10.0);
     }
 
     /*

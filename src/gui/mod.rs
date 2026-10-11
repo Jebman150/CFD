@@ -16,6 +16,7 @@ impl GUI {
         root_ui().window(hash!(), vec2(10.0, 10.0), vec2(150.0, 500.0),
         |ui| {
             ui.checkbox(hash!(), "Draw cells", &mut settings.render_cells);
+            ui.checkbox(hash!(), "Draw streamlines", &mut settings.render_streamlines);
             ui.checkbox(hash!(), "Draw velocity debug", &mut settings.render_velocity_debug);
             ui.checkbox(hash!(), "Draw divergence", &mut settings.render_divergence);
             ui.checkbox(hash!(), "Draw pressure", &mut settings.render_pressure);

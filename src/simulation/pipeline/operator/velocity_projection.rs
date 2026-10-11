@@ -40,7 +40,7 @@ impl SimulationOperator for VelocityProjector {
                     ));
                 }
 
-                let new_vel = old_vel - (dt / density) * pressure_gradient;
+                let new_vel = old_vel + (dt / density) * pressure_gradient;
 
                 data.velocity[axis].set(&context, &face_idx, new_vel);
             }
