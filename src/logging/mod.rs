@@ -1,8 +1,24 @@
 use std::error::Error;
-use std::fs::File;
+use std::fs::{File, read_dir, remove_file};
 use std::io::Write;
+use std::path::Path;
 
-pub fn start_solver_log(file: &str) -> Result<(), Box<dyn Error>> {
+pub fn clear_log_directory<P: AsRef<Path>>(dir: P) -> std::io::Result<()> {
+    for entry in read_dir(dir)? {
+        let entry = entry?;
+        let path = entry.path();
+
+        if path.is_dir() {
+            clear_log_directory(&path)?;
+        } else if path.is_file() {
+            remove_file(&path)?;
+        }
+    }
+
+    Ok(())
+}
+
+pub fn start_log_entry(file: &str) -> Result<(), Box<dyn Error>> {
     let filename = file;
     let mut file = File::options()
         .append(true)
@@ -13,7 +29,7 @@ pub fn start_solver_log(file: &str) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-pub fn log_solver_value(file: &str, value: f32) -> Result<(), Box<dyn Error>> {
+pub fn log_value(file: &str, value: f32) -> Result<(), Box<dyn Error>> {
     let filename = file;
     let mut file = File::options()
         .append(true)

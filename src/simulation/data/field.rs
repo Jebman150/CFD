@@ -1,73 +1,66 @@
-use std::ops::Mul;
+use crate::simulation::data::grid::layout::{CellLayout, FaceLayout, GridLayout};
+use colored::*;
 
-use super::grid::{Grid2D, multi_index::{CellIndex, FaceIndex, FromIndex}};
+use super::grid::{multi_index::{CellIndex, FaceIndex, FromIndex}};
 
-#[derive(Clone, Copy, PartialEq)]
-pub enum CellType {
-    Solid,
-    Fluid
-}
+pub type CellField2<T> = Field<T, CellIndex<2>, CellLayout<2>>;
+pub type CellField2F = Field<f32, CellIndex<2>, CellLayout<2>>;
+pub type FaceField2F = Field<f32, FaceIndex<2>, FaceLayout<2>>;
 
 #[derive(Clone)]
-pub struct Field<T, S> {
+pub struct Field<T, S, L>
+where
+    L: GridLayout<2>
+{
     pub data: Vec<T>,
-    _marker: std::marker::PhantomData<S>
+    _marker: std::marker::PhantomData<S>,
+    pub layout: L,
 }
 
-impl<S> Field<f32, S> {
-    pub fn new(size: usize) -> Self {
-        Field {
-            data: vec![0f32; size],
-            _marker: std::marker::PhantomData
-        }
-    }
-    
-    pub fn print(&self) {
-        println!("{:?}", self.data);
-    }
-}
-
-impl<S> Field<CellType, S> {
-    pub fn new(size: usize) -> Self {
-        Field {
-            data: vec![CellType::Fluid; size],
-            _marker: std::marker::PhantomData
+impl<T, S, L> Field<T, S, L>
+where
+    L: GridLayout<2> + Clone,
+    T: Default + Clone
+{
+    pub fn new(layout: &L) -> Self {
+        Self {
+            data: vec![T::default(); layout.total_count()],
+            _marker: std::marker::PhantomData,
+            layout: layout.clone()
         }
     }
 }
 
-impl<T> Field<T, CellIndex<2>> 
+impl<T> Field<T, CellIndex<2>, CellLayout<2>> 
 where
     T: Copy
 {
     pub fn get(
         &self,
-        grid: &Grid2D,
         idx: &CellIndex<2>
     ) -> &T {
-        &self.data[grid.linearize_cell_index(idx)]
+        &self.data[self.layout.linearize(&idx.idx)]
     }
 
     pub fn set(
         &mut self,
-        grid: &Grid2D,
         idx: &CellIndex<2>,
         value: T
     ) {
-        self.data[grid.linearize_cell_index(idx)] = value;
+        self.data[self.layout.linearize(&idx.idx)] = value;
     }
 }
 
-impl Field<f32, CellIndex<2>>
+impl Field<f32, CellIndex<2>, CellLayout<2>>
 {
     pub fn sample(
         &self,
-        grid: &Grid2D,
         pos: [f32; 2],
+        dx: [f32; 2],
     ) -> f32 {
 
-        let gx = pos[0] / grid.get_delta_x(0) - 0.5;
-        let gy = pos[1] / grid.get_delta_x(1) - 0.5;
+        let gx = pos[0] / dx[0] - 0.5;
+        let gy = pos[1] / dx[1] - 0.5;
 
         let i0 = gx.floor() as isize;
         let j0 = gy.floor() as isize;
@@ -79,25 +72,21 @@ impl Field<f32, CellIndex<2>>
         let j1 = j0 + 1;
 
         let v00 = self.sample_safe(
-            grid,
             i0,
             j0,
         );
 
         let v10 = self.sample_safe(
-            grid,
             i1,
             j0,
         );
 
         let v01 = self.sample_safe(
-            grid,
             i0,
             j1,
         );
 
         let v11 = self.sample_safe(
-            grid,
             i1,
             j1,
         );
@@ -116,11 +105,10 @@ impl Field<f32, CellIndex<2>>
 
     fn sample_safe(
         &self,
-        grid: &Grid2D,
         i: isize,
         j: isize,
     ) -> &f32 {
-        let dims = grid.get_outer_size();
+        let dims = self.layout.dimensions();
 
         let ii = i.clamp(0, dims[0] as isize - 1) as usize;
 
@@ -131,48 +119,50 @@ impl Field<f32, CellIndex<2>>
                 [ii, jj],
             );
 
-        &self.data[grid.linearize_cell_index(&cell)]
+        &self.data[self.layout.linearize(&cell.idx)]
     }
 }
 
-impl<T> Field<T, FaceIndex<2>> 
+impl<T> Field<T, FaceIndex<2>, FaceLayout<2>> 
 where
-    T: Copy
+    T: Copy + Default
 {
     pub fn get(
         &self,
-        grid: &Grid2D,
         idx: &FaceIndex<2>
-    ) -> &T {
-        &self.data[grid.linearize_face_index(idx)]
+    ) -> T {
+        let index = self.layout.linearize(&idx.idx);
+        if  index >= self.data.len() {
+            println!("{}", format!("ERROR: Index out of bounds in field. Length is {} but index is {}.", self.data.len(), index).red());
+            return T::default();
+        }
+        self.data[index]
     }
 
     pub fn set(
         &mut self,
-        grid: &Grid2D,
         idx: &FaceIndex<2>,
         value: T
     ) {
-        self.data[grid.linearize_face_index(idx)] = value;
+        self.data[self.layout.linearize(&idx.idx)] = value;
     }
 }
 
-impl Field<f32, FaceIndex<2>>
+impl Field<f32, FaceIndex<2>, FaceLayout<2>>
 {
     pub fn sample(
         &self,
-        grid: &Grid2D,
-        axis: usize,
         pos: [f32; 2],
+        dx: [f32; 2]
     ) -> f32 {
-        let offset = if axis == 0 {
+        let offset = if self.layout.get_axis() == 0 {
             [0.0, 0.5]
         } else {
             [0.5, 0.0]
         };
 
-        let gx = pos[0] / grid.get_delta_x(0) - offset[0];
-        let gy = pos[1] / grid.get_delta_x(1) - offset[1];
+        let gx = pos[0] / dx[0] - offset[0];
+        let gy = pos[1] / dx[1] - offset[1];
 
         let i0 = gx.floor() as isize;
         let j0 = gy.floor() as isize;
@@ -184,29 +174,21 @@ impl Field<f32, FaceIndex<2>>
         let j1 = j0 + 1;
 
         let v00 = self.sample_safe(
-            grid,
-            axis,
             i0,
             j0,
         );
 
         let v10 = self.sample_safe(
-            grid,
-            axis,
             i1,
             j0,
         );
 
         let v01 = self.sample_safe(
-            grid,
-            axis,
             i0,
             j1,
         );
 
         let v11 = self.sample_safe(
-            grid,
-            axis,
             i1,
             j1,
         );
@@ -225,14 +207,11 @@ impl Field<f32, FaceIndex<2>>
 
     fn sample_safe(
         &self,
-        grid: &Grid2D,
-        axis: usize,
         i: isize,
         j: isize,
     ) -> &f32 {
 
-        let dims =
-            grid.get_face_dimension(axis);
+        let dims = self.layout.dimensions();
 
         let ii = i.clamp(0, dims[0] as isize - 1)
             as usize;
@@ -242,10 +221,10 @@ impl Field<f32, FaceIndex<2>>
 
         let face =
             FaceIndex::<2>::new(
-                axis,
+                self.layout.get_axis(),
                 [ii, jj],
             );
 
-        &self.data[grid.linearize_face_index(&face)]
+        &self.data[self.layout.linearize(&face.idx)]
     }
 }

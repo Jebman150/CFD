@@ -1,7 +1,6 @@
 use std::time::Instant;
 
-use colored::*;
-use crate::simulation::pipeline::operator::SimulationOperator;
+use crate::{logging::log_value, simulation::{PhysicalConstants, pipeline::operator::SimulationOperator}};
 
 pub struct DivergenceComputation;
 
@@ -9,21 +8,23 @@ impl SimulationOperator for DivergenceComputation {
     fn execute(
         &mut self,
         data: &mut crate::simulation::data::SimulationData,
-        context: &mut crate::simulation::data::grid::Grid2D,
+        _physical_constants: &PhysicalConstants,
+        _dt: f32,
     ) -> Result<u128, String> {
         let start = Instant::now();
+        puffin::profile_scope!("compute_divergence");
 
-        for cell_idx in context.total_cell_iter() {
+        for cell_idx in data.grid.all_cells() {
             let mut sum = 0.0;
 
             for axis in 0..2 {
-                let adjacent_faces = context.get_face_indices(&cell_idx, axis);
+                let adjacent_faces = data.grid.get_face_indices(&cell_idx, axis);
                 let right = data.velocity[axis]
-                    .get(&context, &adjacent_faces[1]);
+                    .get(&adjacent_faces[1]);
                 let left = data.velocity[axis]
-                    .get(&context, &adjacent_faces[0]);
+                    .get(&adjacent_faces[0]);
 
-                let dx = context.get_delta_x(axis);
+                let dx = data.grid.get_delta_x()[axis];
 
                 if !right.is_finite()
                     || !left.is_finite()
@@ -37,7 +38,7 @@ impl SimulationOperator for DivergenceComputation {
                     ));
                 }
 
-                sum += (right - left) / context.get_delta_x(axis);
+                sum += (right - left) / data.grid.get_delta_x()[axis];
                 if !sum.is_finite() {
                     return Err(format!(
                         "Divergence overflow: cell {:?}, axis {}",
@@ -46,9 +47,8 @@ impl SimulationOperator for DivergenceComputation {
                 }
             }
 
-            data.divergence.set(context, &cell_idx, sum);
+            data.divergence.set(&cell_idx, sum);
         }
-        println!("{}", format!("Computed global divergence: {}", data.divergence.data.iter().sum::<f32>()).green());
         Ok(start.elapsed().as_micros())
     }
 
@@ -57,23 +57,52 @@ impl SimulationOperator for DivergenceComputation {
     }
 }
 
+pub struct DivergenceChecker;
+
+impl SimulationOperator for DivergenceChecker {
+    fn execute(
+        &mut self,
+        data: &mut crate::simulation::data::SimulationData,
+        _physical_constants: &PhysicalConstants,
+        _dt: f32,
+    ) -> Result<u128, String> {
+        let mut max = 0.0;
+        for d in &data.divergence.data {
+            if (*d).abs() >= 0.1 {
+                return Err(format!(
+                    "Divergence check failed: div(v) = {}",
+                    d.abs()
+                ));
+            }
+            if d.abs() >= max {
+                max = d.abs();
+            }
+        }
+        let _ = log_value("logs/divergence_checker/max_divergence.log", max);
+        Ok(0)
+    }
+
+    fn get_name(&self) -> &'static str {
+        "Divergence check"
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::simulation::data::{SimulationData, grid::{Grid2D, multi_index::{CellIndex, FaceIndex, FromIndex}}};
+    use crate::simulation::data::{SimulationData, grid::multi_index::{CellIndex, FaceIndex, FromIndex}};
 
-    fn uniform_empty_grid() -> (SimulationData, Grid2D) {
-        let topology = Grid2D::new([3, 3], [0.05, 0.1]);
-        let data = SimulationData::new(&topology);
-        (data, topology)
+    fn uniform_empty_grid() -> SimulationData {
+        let data = SimulationData::new([3, 3]);
+        data
     }
 
     #[test]
     fn test_divergence_computation_null() {
-        let (mut empty_grid, mut topology) = uniform_empty_grid();
+        let mut empty_grid = uniform_empty_grid();
         let mut test_operator = DivergenceComputation{};
 
-        test_operator.execute(&mut empty_grid, &mut topology).unwrap();
+        test_operator.execute(&mut empty_grid, &PhysicalConstants::default(), 1.0).unwrap();
 
         for d in empty_grid.divergence.data {
             assert_eq!(d, 0.0);
@@ -82,15 +111,15 @@ mod tests {
 
     #[test]
     fn test_divergence_computation() {
-        let (mut test_grid, mut topology) = uniform_empty_grid();
-        test_grid.velocity[0].set(&topology, &FaceIndex::from_index([1, 1]), 1.0);
-        test_grid.velocity[0].set(&topology, &FaceIndex::from_index([2, 1]), 1.0);
+        let mut test_grid = uniform_empty_grid();
+        test_grid.velocity[0].set(&FaceIndex::from_index([1, 1]), 1.0);
+        test_grid.velocity[0].set(&FaceIndex::from_index([2, 1]), 1.0);
         let mut test_operator = DivergenceComputation{};
 
-        test_operator.execute(&mut test_grid, &mut topology).unwrap();
+        test_operator.execute(&mut test_grid, &PhysicalConstants::default(), 1.0).unwrap();
 
-        assert_eq!(*test_grid.divergence.get(&topology, &CellIndex::from_index([0, 1])), -1.0 / topology.get_delta_x(0));
-        assert_eq!(*test_grid.divergence.get(&topology, &CellIndex::from_index([1, 1])), 0.0);
-        assert_eq!(*test_grid.divergence.get(&topology, &CellIndex::from_index([2, 1])), 1.0 / topology.get_delta_x(0));
+        assert_eq!(*test_grid.divergence.get(&CellIndex::from_index([0, 1])), -1.0 / test_grid.grid.get_delta_x()[0]);
+        assert_eq!(*test_grid.divergence.get(&CellIndex::from_index([1, 1])), 0.0);
+        assert_eq!(*test_grid.divergence.get(&CellIndex::from_index([2, 1])), 1.0 / test_grid.grid.get_delta_x()[0]);
     }
 }

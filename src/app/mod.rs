@@ -1,6 +1,4 @@
-use std::thread;
-use std::time::Duration;
-
+use macroquad::time::draw_fps;
 use macroquad::window::next_frame;
 
 use crate::gui::GUI;
@@ -33,15 +31,22 @@ impl Application {
 
     pub async fn run(&mut self) -> Result<(), ()> {
         while self.is_running {
-            self.gui.get_render_settings(&mut self.render_settings);
-            self.gui.get_simulation_settings(&mut self.simulation_settings);
+            egui_macroquad::ui(|ctx: &egui_macroquad::egui::Context| {
+                ctx.set_visuals(egui_macroquad::egui::Visuals::dark());
+                self.gui.get_render_settings(ctx, &mut self.render_settings);
+                self.gui.get_simulation_settings(ctx, &mut self.simulation_settings, &self.controller.solver_registry);
+            });
 
             self.controller.step(&self.simulation_settings);
             self.simulation_settings.step = false;
 
-            self.renderer.draw(&self.controller.data, &self.controller.topology, &self.render_settings);
+            self.renderer.draw(&self.controller.data, &self.render_settings);
 
-            //thread::sleep(Duration::from_secs(1));
+            egui_macroquad::draw();
+            if self.simulation_settings.is_running {
+                puffin::GlobalProfiler::lock().new_frame();
+            }
+            draw_fps();
             next_frame().await;
         }
         Ok(())

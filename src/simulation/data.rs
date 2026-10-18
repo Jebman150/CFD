@@ -1,47 +1,45 @@
-use crate::simulation::data::{field::{CellType, Field}, grid::{Grid, Grid2D, multi_index::{CellIndex, FaceIndex}}};
+use crate::simulation::data::{field::{CellField2, CellField2F, FaceField2F}, grid::{Grid, Grid2D, layout::{CellLayout, FaceLayout}}};
 
 pub mod field;
 pub mod grid;
 
 pub struct SimulationData {
-    pub topology: Grid<2>,
+    pub grid: Grid<2>,
     
-    pub pressure: Field<f32, CellIndex<2>>,
-    pub divergence: Field<f32, CellIndex<2>>,
-    pub smoke: Field<f32, CellIndex<2>>,
+    pub pressure: CellField2F,
+    pub divergence: CellField2F,
+    pub smoke: CellField2F,
 
-    pub velocity: [Field<f32, FaceIndex<2>>; 2],
+    pub velocity: [FaceField2F; 2],
 
-    pub cell_types: Field<CellType, CellIndex<2>>,
+    pub is_solid: CellField2<bool>,
+    pub flow_edge_allowed: CellField2<i8>,
+    pub flow_edge_count: [CellField2<i8>; 2],
 }
 
 impl SimulationData {
-    pub fn new(topology: &Grid<2>) -> Self {
+    pub fn new(dim: [usize; 2]) -> Self {
+        let cell_layout = CellLayout::<2>::new(dim);
+        let x_face_layout = FaceLayout::<2>::new(dim, 0);
+        let y_face_layout = FaceLayout::<2>::new(dim, 1);
+
+
         Self {
-            topology: topology.clone(),
-            pressure: Field::<f32, CellIndex<2>>::new(topology.get_total_cell_count()),
-            divergence: Field::<f32, CellIndex<2>>::new(topology.get_total_cell_count()),
-            smoke: Field::<f32, CellIndex<2>>::new(topology.get_total_cell_count()),
+            grid: Grid2D::new(dim, [1.0 / dim[0] as f32, 1.0 / dim[1] as f32]),
+            pressure: CellField2F::new(&cell_layout),
+            divergence: CellField2F::new(&cell_layout),
+            smoke: CellField2F::new(&cell_layout),
             velocity: [
-                Field::<f32, FaceIndex<2>>::new(topology.get_total_face_count(0)),
-                Field::<f32, FaceIndex<2>>::new(topology.get_total_face_count(1))
+                FaceField2F::new(&x_face_layout),
+                FaceField2F::new(&y_face_layout)
             ],
 
-            cell_types: Field::<CellType, CellIndex<2>>::new(topology.get_total_cell_count())
-        }
-    }
-
-    pub fn print_velocity(&self, context: &Grid2D, axis: usize) {
-        let mut current_y = 0;
-        print!("{}", current_y);
-        for mut face_idx in context.face_iter(axis) {
-            face_idx.axis = axis;
-            if face_idx.idx[1] != current_y {
-                current_y = face_idx.idx[1];
-                println!("");
-                print!("{}", current_y);
-            }
-            print!("{} ", self.velocity[axis].get(context, &face_idx));
+            is_solid: CellField2::<bool>::new(&cell_layout),
+            flow_edge_allowed: CellField2::<i8>::new(&cell_layout),
+            flow_edge_count: [
+                CellField2::<i8>::new(&cell_layout),
+                CellField2::<i8>::new(&cell_layout)
+            ],
         }
     }
 }

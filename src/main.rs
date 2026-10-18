@@ -7,9 +7,31 @@ mod rendering;
 mod logging;
 
 #[macroquad::main("CFD")]
-async fn main() {
+async fn main() -> std::io::Result<()> {
     println!("------- Initialization -------");
     let mut app = Application::new();
+    logging::clear_log_directory("logs")?;
+
+    puffin::set_scopes_on(true);
+
+    let mut test: i8 = 1;
+    test = test | (1 << 2);
+    println!("{}", test >> 0 & 1);
+    println!("{}", test >> 1 & 1);
+    println!("{}", test >> 2 & 1);
+    println!("{}", test >> 3 & 1);
+
+    let server_addr =
+        format!("127.0.0.1:{}", puffin_http::DEFAULT_PORT);
+
+    let _puffin_server =
+        puffin_http::Server::new(&server_addr)
+            .expect("Failed to start Puffin server");
+
+    println!(
+        "Rayon worker threads: {}",
+        rayon::current_num_threads()
+    );
 
     println!("------- Main Loop -------");
     match app.run().await {
@@ -19,6 +41,7 @@ async fn main() {
 
 
     println!("------- Program closed -------");
+    Ok(())
 
 
     /*let mut simulation = initialize();

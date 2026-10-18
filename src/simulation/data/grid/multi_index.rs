@@ -5,33 +5,6 @@ pub trait FromIndex<const D: usize> {
     fn from_index(idx: [usize; D]) -> Self;
 }
 
-/// An object with this trait can be converted into a linear 
-/// array index with a given stride in each dimension:
-/// ```
-/// struct Index<const D: usize> {
-///     idx: [usize, D]
-/// }
-/// 
-/// impl<const D: usize> Linearizable<D> for Index<D> {
-///     fn linearize(&self, stride: &[usize; D]) -> usize {
-///         let mut sum = 0;
-///         for (axis, idx) in self.idx.iter().enumerate() {
-///             sum += idx * stride[axis];
-///         }
-///         sum
-///     }
-/// }
-/// 
-/// let idx = Index<2> {idx: [1, 1]};
-/// let linearized = idx.linearize(&[1, 10]);
-/// // -> 1 increment in x counts as one increment in the array index
-/// // -> 1 increment in y counts as 10 increments in the array index
-/// assert_eq!(linearized, 11)
-/// ```
-pub trait Linearizable<const D: usize> {
-    fn linearize(&self, stride: &[usize; D]) -> usize;
-}
-
 pub struct MultiIndex<const D: usize> {
     indices: [usize; D],
     lower: [usize; D],
@@ -49,12 +22,14 @@ impl<const D: usize> MultiIndex<D> {
         }
     }
 
+    /// Inclusive
     pub fn set_lower_bound(mut self, axis: usize, lower_bound: usize) -> Self {
         self.lower[axis] = lower_bound;
         self.indices[axis] = lower_bound;
         self
     }
 
+    /// Exclusive
     pub fn set_upper_bound(mut self, axis: usize, upper_bound: usize) -> Self {
         self.upper[axis] = upper_bound+1;
         self
@@ -74,16 +49,6 @@ impl<const D: usize> MultiIndex<D> {
             self.indices[axis] = self.lower[axis];
         }
         self
-    }
-}
-
-impl<const D: usize> Linearizable<D> for MultiIndex<D> {
-    fn linearize(&self, stride: &[usize; D]) -> usize {
-        let mut sum = 0;
-        for (axis, idx) in self.indices.iter().enumerate() {
-            sum += idx * stride[axis];
-        }
-        sum
     }
 }
 
@@ -110,6 +75,50 @@ impl<const D: usize> Iterator for MultiIndex<D> {
             }
         }
         Some(result)
+    }
+}
+
+pub struct FaceIndexIter<const D: usize> {
+    inner: MultiIndex<D>,
+    axis: usize,
+}
+
+impl<const D: usize> FaceIndexIter<D> {
+    pub fn new(mut size: [usize; D], axis: usize) -> Self {
+        size[axis] += 1;
+        Self {
+            inner: MultiIndex::<D>::new(&size),
+            axis
+        }
+    }
+
+    pub fn set_lower_bound(mut self, axis: usize, lower_bound: usize) -> Self {
+        self.inner = self.inner.set_lower_bound(axis, lower_bound);
+        self
+    }
+
+    pub fn set_upper_bound(mut self, axis: usize, upper_bound: usize) -> Self {
+        self.inner = self.inner.set_upper_bound(axis, upper_bound);
+        self
+    }
+
+    pub fn restrict_axis(mut self, axis: usize, value: usize) -> Self {
+        self.inner = self.inner.restrict_axis(axis, value);
+        self
+    }
+
+    pub fn exclude_border(mut self) -> Self {
+        self.inner = self.inner.exclude_border();
+        self
+    }
+}
+
+impl<const D: usize> Iterator
+    for FaceIndexIter<D> {
+    type Item = FaceIndex<D>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.inner.next().map(FaceIndex::from_index).map(|f| f.with_axis(self.axis))
     }
 }
 
@@ -150,12 +159,6 @@ where
     }
 }
 
-impl<T, const D: usize> Linearizable<D> for TypedMultiIndex<T, D> {
-    fn linearize(&self, stride: &[usize; D]) -> usize {
-        self.inner.linearize(stride)
-    }
-} 
-
 impl<T, const D: usize> Iterator
     for TypedMultiIndex<T, D>
 where
@@ -173,16 +176,6 @@ pub struct CellIndex<const D: usize> {
     pub idx: [usize; D],
 }
 
-impl<const D: usize> Linearizable<D> for CellIndex<D> {
-    fn linearize(&self, stride: &[usize; D]) -> usize {
-        let mut sum = 0;
-        for (axis, idx) in self.idx.iter().enumerate() {
-            sum += idx * stride[axis];
-        }
-        sum
-    }
-}
-
 impl<const D: usize> FromIndex<D> for CellIndex<D> {
     fn from_index(idx: [usize; D]) -> Self {
         Self { idx }
@@ -195,20 +188,15 @@ pub struct FaceIndex<const D: usize> {
     pub idx: [usize; D],
 }
 
-impl<const D: usize> Linearizable<D> for FaceIndex<D> {
-    fn linearize(&self, stride: &[usize; D]) -> usize {
-        let mut sum = 0;
-        for (axis, idx) in self.idx.iter().enumerate() {
-            sum += idx * stride[axis];
-        }
-        sum
-    }
-}
-
 impl<const D: usize> FaceIndex<D> {
 
     pub fn new(axis: usize, idx: [usize; D]) -> Self {
         Self { axis, idx }
+    }
+
+    fn with_axis(mut self, axis: usize) -> Self {
+        self.axis = axis;
+        self
     }
 }
 
