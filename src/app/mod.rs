@@ -1,54 +1,212 @@
-use macroquad::time::draw_fps;
-use macroquad::window::next_frame;
+use std::sync::Arc;
 
-use crate::gui::GUI;
-use crate::simulation::{SimulationController, SimulationSettings};
-use crate::rendering::{RenderSettings, Renderer};
+use egui_winit::EventResponse;
+use pollster::FutureExt;
+use tracing::Level;
+use wgpu::{Color, CommandEncoder};
+use winit::{application::ApplicationHandler, event::{KeyEvent, WindowEvent}, event_loop::ActiveEventLoop, keyboard::{KeyCode, PhysicalKey}};
+
+use crate::{
+    app::{
+        gpu_context::GPUContext, 
+        window_manager::WindowManager
+    }, gui::GUI, rendering::renderer::{
+        Renderer,
+        scene::{
+            InstanceId,
+            mesh::MeshId
+        },
+    }, simulation::{Simulation, data::ScalarField}
+};
+
+mod window_manager;
+pub mod gpu_context;
 
 pub struct Application {
+    pub gpu_context: Arc<GPUContext>,
     pub gui: GUI,
-    pub controller: SimulationController,
     pub renderer: Renderer,
+    pub window_manager: WindowManager,
 
-    pub is_running: bool,
+    pub simulation: Simulation,
 
-    render_settings: RenderSettings,
-    simulation_settings: SimulationSettings,
+    pub grid_cell_mesh: MeshId,
+    pub grid_cell_instance_range: [InstanceId; 2]
 }
 
 impl Application {
-    pub fn new() -> Self {
-        Self {
-            gui: GUI::new(),
-            controller: SimulationController::new(),
-            renderer: Renderer::new(),
-            is_running: true,
+    pub fn new() -> anyhow::Result<Self> {
+        let gpu_context = Arc::new(GPUContext::new().block_on()?);
 
-            render_settings: Default::default(),
-            simulation_settings: Default::default(),
+        Ok(Self {
+            renderer: Renderer::new(gpu_context.device.clone()),
+            gui: GUI::new(gpu_context.device.clone(), gpu_context.queue.clone()),
+            window_manager: WindowManager::new(),
+
+            simulation: Simulation::new(gpu_context.clone()),
+
+            grid_cell_mesh: MeshId(0),
+            grid_cell_instance_range: [InstanceId(0), InstanceId(0)],
+            gpu_context,
+        })
+    }
+
+    pub fn rebuild_scene(&mut self) {
+        self.renderer.clear_scene();
+        self.renderer.clear_meshes();
+
+        let x_res = self.simulation.settings().grid_size[0];
+        let y_res = self.simulation.settings().grid_size[1];
+
+        let w = 400.0;
+        let h = 400.0;
+
+        let dx = w / x_res as f32;
+        let dy = h / y_res as f32;
+
+        let grid_cell_mesh = self.renderer.add_rectangle(dx, dy);
+
+        for y in 0..y_res {
+            let y_frac = y as f32 / y_res as f32;
+            for x in 0..x_res {
+                let x_frac = x as f32 / x_res as f32;
+                self.grid_cell_instance_range[1] = self.renderer.add_instance(
+                    grid_cell_mesh,
+                    w * x_frac + 10.0,
+                    h * y_frac + 10.0,
+                    Color{r: x_frac as f64, g: 0.0, b: y_frac as f64, a: 1.0});
+            }
         }
     }
 
-    pub async fn run(&mut self) -> Result<(), ()> {
-        while self.is_running {
-            egui_macroquad::ui(|ctx: &egui_macroquad::egui::Context| {
-                ctx.set_visuals(egui_macroquad::egui::Visuals::dark());
-                self.gui.get_render_settings(ctx, &mut self.render_settings);
-                self.gui.get_simulation_settings(ctx, &mut self.simulation_settings, &self.controller.solver_registry);
-            });
+    pub fn update(&mut self) {
+        let mut encoder = self.gpu_context.device.create_command_encoder(
+            &wgpu::CommandEncoderDescriptor {
+                label: Some("Frame encoder"),
+            },
+        );
 
-            self.controller.step(&self.simulation_settings);
-            self.simulation_settings.step = false;
+        self.update_gui();
+        self.update_simulation(&mut encoder);
+        self.update_scene();
+        self.present(encoder);
+    }
 
-            self.renderer.draw(&self.controller.data, &self.render_settings);
+    fn update_gui(&mut self) {
+        puffin::profile_function!();
+        let Some(gui_state) = self.gui.active() else { return; };
+        let solver_names = self.simulation.get_solver_names();
+        gui_state.run_ui(
+            &mut self.renderer.settings_mut(),
+            self.simulation.settings_mut(),
+            &solver_names
+        );
+    }
 
-            egui_macroquad::draw();
-            if self.simulation_settings.is_running {
-                puffin::GlobalProfiler::lock().new_frame();
-            }
-            draw_fps();
-            next_frame().await;
+    fn update_simulation(&mut self, encoder: &mut CommandEncoder) {
+        puffin::profile_function!();
+        if let Some(scalar_field) = self.renderer.settings().rendered_scalar_field {
+            self.simulation.update(encoder, scalar_field);
         }
-        Ok(())
+    }
+
+    fn update_scene(&mut self) {
+        puffin::profile_function!();
+        let instance_range = self.grid_cell_instance_range[0].0..self.grid_cell_instance_range[1].0;
+
+        for (_cell, instance_idx) in self.simulation.grid.all_cells().zip(instance_range) {
+            self.renderer.scene.set_color(
+                self.grid_cell_mesh,
+                InstanceId(instance_idx),
+                Color::RED,
+                //self.sampler.sample_cell_color(frame_data, &self.render_settings, &cell)
+            );
+        }
+    }
+
+    pub fn present(&mut self, mut encoder: CommandEncoder) {
+        puffin::profile_function!();
+        let Some(window_state) = self.window_manager.active() else { return; };
+        window_state.start_frame();
+
+        let Some(frame) = window_state.get_current_texture(&self.gpu_context) else { return; };
+        let view = frame.texture.create_view(&wgpu::TextureViewDescriptor::default());
+
+        self.renderer.render(&view, &mut encoder);
+        let mut command_buffer = self.gui.render(&view, &mut encoder, window_state.get_surface_config());
+
+        command_buffer.push(encoder.finish());
+        self.gpu_context.queue.submit(command_buffer);
+        self.gpu_context.queue.present(frame);
+
+        puffin::GlobalProfiler::lock().new_frame();
+    }
+
+    pub fn handle_key(&mut self, event_loop: &ActiveEventLoop, key_code: KeyCode, is_pressed: bool) {
+        match (key_code, is_pressed) {
+            (KeyCode::Escape, true) => event_loop.exit(),
+            _ => {}
+        }
+    }
+}
+
+impl ApplicationHandler for Application {
+    fn resumed(&mut self, event_loop: &ActiveEventLoop) {
+        match self.window_manager.resume(event_loop, &self.gpu_context) {
+            Ok(()) => {},
+            Err(err) => {
+                tracing::event!(Level::ERROR, "Could not resume: {}", err);
+                return;
+            }
+        }
+
+        let Some(window_state) = self.window_manager.active_ref() else { tracing::error!("No window after resume?"); return; };
+
+        self.renderer.create_render_pipeline(
+            self.gpu_context.device.clone(),
+            self.gpu_context.queue.clone(),
+            window_state.get_surface_config(),
+            self.simulation.state_ref()
+        );
+        self.gui.resumed(window_state.get_window(), window_state.get_surface_config());
+        self.renderer.update_viewports(&window_state.get_window_size());
+    }
+
+    fn window_event(
+        &mut self,
+        event_loop: &ActiveEventLoop,
+        _window_id: winit::window::WindowId,
+        event: winit::event::WindowEvent,
+    ) {
+        let Some(window_state) = self.window_manager.active() else { return; };
+
+
+        let gui_response = 
+        if let Some(gui_state) = self.gui.active() {
+            gui_state.on_window_event(window_state.get_window(), &event)
+        } else {
+            EventResponse { consumed: false, repaint: false }
+        };
+
+        match event {
+            WindowEvent::CloseRequested => event_loop.exit(),
+            WindowEvent::Resized(size) => {
+                window_state.resize(size.width, size.height, &self.gpu_context);
+                self.renderer.update_viewports(&window_state.get_window_size());
+            }
+            WindowEvent::RedrawRequested => {
+                self.update();
+            }
+            WindowEvent::KeyboardInput {
+                event:
+                    KeyEvent {
+                        physical_key: PhysicalKey::Code(code),
+                        state: key_state,
+                        ..
+                    },
+                ..
+            } => if !gui_response.consumed { self.handle_key(event_loop, code, key_state.is_pressed()) },
+            _ => {}
+        }
     }
 }

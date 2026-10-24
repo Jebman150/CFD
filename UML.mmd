@@ -1,0 +1,524 @@
+classDiagram
+    class src_gui_GUIState {
+        +egui_ctx: Context
+        +egui_winit: State
+        +egui_renderer: src_rendering_Renderer
+        +window: Arc~Window~
+        -full_output: Option~FullOutput~
+        -paint_jobs: Vec~ClippedPrimitive~
+        +on_window_event(window: Arc~Window~, event: &WindowEvent) EventResponse
+        +run_ui(render_settings: &mut RenderSettings, simulation_settings: &mut SimulationSettings, solver_registry: &SolverRegistry) void
+        +create_paint_jobs(full_output: &mut FullOutput) void
+        +get_render_settings(ctx: Context, settings: &mut RenderSettings) void
+        +get_simulation_settings(ctx: Context, settings: &mut SimulationSettings, solver_registry: &SolverRegistry) void
+    }
+    class src_gui_GUI {
+        +device: Arc~Device~
+        +queue: Arc~Queue~
+        -state: Option~src_gui_GUIState~
+        +new(device: Arc~Device~, queue: Arc~Queue~) Self
+        +resumed(window: Arc~Window~, surface_config: &SurfaceConfiguration) void
+        +active() Option~&mut GUIState~
+        +render(target: &TextureView, encoder: &mut CommandEncoder, surface_config: &SurfaceConfiguration) Vec~CommandBuffer~
+    }
+    class src_rendering_renderer_scene_InstanceId {
+    }
+    class src_rendering_renderer_scene_Instance {
+        +position: [f32; 2]
+        +angle: f32
+        +scale: [f32; 2]
+        +color: [f32; 4]
+        +new(x: f32, y: f32, color: Color) Self
+        +layout() VertexBufferLayout~'static~
+        +bytes() u64
+        +set_color(color: Color) void
+    }
+    class src_rendering_renderer_scene_Scene {
+        +instances: HashMap~mesh::MeshId, Vec<Instance>~
+        +new() Self
+        +add_instance(mesh_id: src_rendering_renderer_scene_MeshId, instance: src_rendering_renderer_scene_Instance) src_rendering_renderer_scene_InstanceId
+        +set_color(mesh: src_rendering_renderer_scene_MeshId, instance: src_rendering_renderer_scene_InstanceId, color: Color) void
+        +prepare_frame() src_rendering_renderer_frame_rendering_PreparedFrame
+    }
+    class src_rendering_renderer_scene_Vertex {
+        +position: [f32; 2]
+        +color: [f32; 4]
+        +layout() VertexBufferLayout~'static~
+    }
+    class src_rendering_renderer_scene_MeshId {
+    }
+    class src_rendering_renderer_scene_MeshData {
+        +vertices: Vec~src_rendering_renderer_scene_Vertex~
+        +indices: Vec~u32~
+    }
+    class src_rendering_renderer_frame_rendering_DrawBatch {
+        +mesh_id: src_rendering_renderer_scene_MeshId
+        +first_instance: u32
+        +instance_count: u32
+    }
+    class src_rendering_renderer_frame_rendering_PreparedFrame {
+        +instances: Vec~src_rendering_renderer_scene_Instance~
+        +batches: Vec~src_rendering_renderer_frame_rendering_DrawBatch~
+    }
+    class src_rendering_renderer_frame_rendering_Frame~'frame~ {
+        +render_pass: RenderPass~'frame~
+        +prepared_data: src_rendering_renderer_frame_rendering_PreparedFrame
+    }
+    class src_rendering_renderer_frame_rendering_DynamicBuffer {
+        +buffer: Buffer
+        +capacity: u64
+        +new(device: &Arc~Device~, capacity: u64) Self
+        +grow_to_capacity(device: &Arc~Device~, required: u64) void
+    }
+    class src_rendering_renderer_frame_rendering_FrameDispatcher {
+        -render_pipeline: RenderPipeline
+        -instance_buffer: src_rendering_renderer_frame_rendering_DynamicBuffer
+        -viewport_buffer: Buffer
+        -viewport_bind_group: BindGroup
+        -queue: Arc~Queue~
+        -device: Arc~Device~
+        +new(device: Arc~Device~, queue: Arc~Queue~, surface_config: &SurfaceConfiguration) Self
+        +update_viewport(viewport: &Viewport) void
+        +initialize_pass(encoder: &'frame mut CommandEncoder, target: &TextureView) RenderPass~'frame~
+        +prepare_instance_buffer(prepared_frame: &PreparedFrame) void
+        +dispatch_frame(frame: src_rendering_renderer_frame_rendering_Frame, mesh_registry: &MeshRegistry) void
+    }
+    class src_rendering_renderer_RenderGlobals {
+        +simulation_viewport: src_rendering_renderer_Viewport
+    }
+    class src_rendering_renderer_Default {
+        +default() Self
+    }
+    class src_rendering_renderer_Viewport {
+        +position: [f32; 2]
+        +size: [f32; 2]
+        +new() Self
+        +set_size(size: [f32; 2]) void
+    }
+    class src_rendering_renderer_GPUMesh {
+        +vertex_buffer: Buffer
+        +index_buffer: Buffer
+        +index_count: u32
+        +from_init_data(vertices: &[Vertex], indices: &[u32], device: &Device) Self
+    }
+    class src_rendering_renderer_MeshRegistry {
+        -meshes: HashMap~src_rendering_renderer_scene_MeshId, src_rendering_renderer_GPUMesh~
+        -device: Arc~Device~
+        +new(device: Arc~Device~) Self
+        +register_mesh(mesh: src_rendering_renderer_scene_MeshData) src_rendering_renderer_scene_MeshId
+        +get_mesh(mesh_id: &MeshId) Option~&GPUMesh~
+        +clear() void
+    }
+    class src_rendering_sampler_ColorGradient {
+        +low: Color
+        +mid: Color
+        +high: Color
+        +low_val: f64
+        +high_val: f64
+        +get(val: f32) Color
+    }
+    class src_rendering_sampler_VisualParameter {
+        +fluid_cell: Color
+        +solid_cell: Color
+        +smoke_color: Color
+        +divergence_gradient: src_rendering_sampler_ColorGradient
+        +pressure_gradient: src_rendering_sampler_ColorGradient
+        +velocity_gradient: src_rendering_sampler_ColorGradient
+    }
+    class src_rendering_sampler_VisModeFields {
+        +fmt(f: Formatter) Result
+    }
+    class src_rendering_sampler_RenderSettings {
+        +padding: f32
+        +bar_width: f32
+        +render_streamlines: bool
+        +render_hr_field: bool
+        +render_velocity_debug: bool
+        +vis_mode_fields: src_rendering_sampler_VisModeFields
+        +sim_data_on_gpu: bool
+    }
+    class src_rendering_sampler_Default {
+        +default() Self
+    }
+    class src_rendering_Renderer {
+        -render_globals: src_rendering_renderer_RenderGlobals
+        +scene: src_rendering_renderer_scene_Scene
+        -mesh_registry: src_rendering_renderer_MeshRegistry
+        -frame_dispatcher: Option~src_rendering_renderer_frame_rendering_FrameDispatcher~
+        +new(device: Arc~Device~) Self
+        +add_rectangle(w: f32, h: f32) src_rendering_renderer_scene_MeshId
+        +add_instance(id: src_rendering_renderer_scene_MeshId, x: f32, y: f32, color: Color) src_rendering_renderer_scene_InstanceId
+        +clear_meshes() void
+        +clear_scene() void
+        +render(target: &TextureView, encoder: &mut CommandEncoder) void
+        +update_viewports(window_size: &PhysicalSize~u32~) void
+        +create_render_pipeline(device: Arc~Device~, queue: Arc~Queue~, surface_config: &SurfaceConfiguration) void
+    }
+    class src_rendering_Sampler {
+        -visuals: src_rendering_sampler_VisualParameter
+        +new() Self
+        +sample_cell_color(sim_data: &SimulationData, settings: &RenderSettings, cell_idx: &CellIndex~2~) Color
+        +cell_color_eval(state: &SimulationData, idx: &CellIndex~2~) Color
+        +velocity_eval(state: &SimulationData, idx: &CellIndex~2~) Color
+        +get_velocity(state: &SimulationData, cell_idx: &CellIndex~2~) [f32; 2]
+        +divergence_eval(state: &SimulationData, idx: &CellIndex~2~) Color
+        +pressure_eval(state: &SimulationData, idx: &CellIndex~2~) Color
+    }
+    class src_app_GPUContext {
+        +instance: src_rendering_renderer_scene_Instance
+        +adapter: Adapter
+        +device: Arc~wgpu::Device~
+        +queue: Arc~wgpu::Queue~
+        +new() Result~Self~
+    }
+    class src_app_Application {
+        +gpu_context: src_app_GPUContext
+        +gui: src_gui_GUI
+        +renderer: src_rendering_Renderer
+        +sampler: src_rendering_Sampler
+        +window_manager: src_app_WindowManager
+        +simulation_controller: src_simulation_SimulationEngine
+        +simulation_settings: src_simulation_SimulationSettings
+        +render_settings: src_rendering_sampler_RenderSettings
+        +grid_cell_mesh: src_rendering_renderer_scene_MeshId
+        +grid_cell_instance_range: [InstanceId; 2]
+        +new() Result~Self~
+        +rebuild_scene() void
+        +update() void
+        +update_gui() void
+        +update_simulation() void
+        +update_scene() void
+        +end_frame() void
+        +handle_key(event_loop: &ActiveEventLoop, key_code: KeyCode, is_pressed: bool) void
+    }
+    class src_app_ApplicationHandler {
+        +resumed(event_loop: &ActiveEventLoop) void
+        +window_event(event_loop: &ActiveEventLoop, _window_id: WindowId, event: WindowEvent) void
+    }
+    class src_app_WindowState {
+        -window: Arc~Window~
+        -surface: Surface~'static~
+        -config: SurfaceConfiguration
+        -is_surface_configured: bool
+        +get_window() Arc~Window~
+        +resize(width: u32, height: u32, gpu_context: &GPUContext) void
+        +start_frame() void
+        +get_window_size() PhysicalSize~u32~
+        +get_current_texture(gpu_context: &GPUContext) Option~SurfaceTexture~
+        +get_surface_config() &SurfaceConfiguration
+    }
+    class src_app_WindowManager {
+        -state: Option~src_app_WindowState~
+        +new() Self
+        +resume(event_loop: &ActiveEventLoop, context: &GPUContext) Result~()~
+        +active() Option~&mut WindowState~
+        +active_ref() Option~&WindowState~
+    }
+    class src_simulation_pipeline_operator_pressure_solution_cpu_solver_CGSolver {
+        +maxit: usize
+        +tolerance: f32
+        +linear_operator: Box~dyn LinearOperator~
+        +pool: ThreadPool
+        +new() Self
+    }
+    class src_simulation_pipeline_operator_pressure_solution_cpu_solver_PressureSolver {
+        +compute(data: &mut SimulationData, physical_constants: &PhysicalConstants, dt: f32) Result~usize, String~
+        +set_maxit(val: usize) void
+        +set_tolerance(val: f32) void
+    }
+    class src_simulation_pipeline_operator_pressure_solution_cpu_solver_GSSolver {
+        -tolerance: f32
+        -maxit: usize
+        +new() Self
+        +max_pressure_residual(data: &SimulationData, b: &[f32]) f32
+    }
+    class src_simulation_pipeline_operator_pressure_solution_cpu_solver_PressureSolver {
+        +compute(data: &mut SimulationData, physical_constants: &PhysicalConstants, dt: f32) Result~usize, String~
+        +set_maxit(val: usize) void
+        +set_tolerance(val: f32) void
+    }
+    class src_simulation_pipeline_operator_pressure_solution_LaplaceOperator {
+    }
+    class src_simulation_pipeline_operator_pressure_solution_LinearOperator {
+        +apply_par(x: &[f32], out: &mut [f32], grid: &Grid2D, is_solid: &CellField2~bool~, edge_flow_allowed: &CellField2~i8~, edge_flow_count: &[CellField2~i8~) void
+        +apply(x: &[f32], out: &mut [f32], grid: &Grid2D, is_solid: &CellField2~bool~, edge_flow_allowed: &CellField2~i8~, edge_flow_count: &[CellField2~i8~) void
+    }
+    class src_simulation_pipeline_operator_SolverStep {
+        -selected_solver: SharedPressureSolver
+        +new(selected_solver: Arc~Mutex<Box<dyn PressureSolver>>~) Self
+    }
+    class src_simulation_pipeline_operator_SimulationOperator {
+        +execute(data: &mut SimulationData, physical_constants: &PhysicalConstants, dt: f32) Result~u128, String~
+        +get_name() &'static str
+    }
+    class src_simulation_pipeline_operator_DivergenceComputation {
+    }
+    class src_simulation_pipeline_operator_SimulationOperator {
+        +execute(data: src_simulation_SimulationData, _physical_constants: &PhysicalConstants, _dt: f32) Result~u128, String~
+        +get_name() &'static str
+        +execute(data: src_simulation_SimulationData, _physical_constants: &PhysicalConstants, _dt: f32) Result~u128, String~
+        +get_name() &'static str
+    }
+    class src_simulation_pipeline_operator_DivergenceChecker {
+    }
+    class src_simulation_pipeline_operator_ApplyDomainBoundaryCondition {
+        -value_left: f32
+        -value_right: f32
+        -value_top: f32
+        -value_bottom: f32
+        +from_config(source_file: &str) Self
+    }
+    class src_simulation_pipeline_operator_SimulationOperator {
+        +execute(data: &mut SimulationData, _physical_constants: &PhysicalConstants, _dt: f32) Result~u128, String~
+        +get_name() &'static str
+        +execute(data: &mut SimulationData, _physical_constants: &PhysicalConstants, _dt: f32) Result~u128, String~
+        +get_name() &'static str
+    }
+    class src_simulation_pipeline_operator_ApplyInteriorBoundaryCondition {
+        +apply_internal_velocity(_data: &mut SimulationData) void
+        +apply_solid_cells_condition(data: &mut SimulationData) void
+        +set_cell_faces(data: &mut SimulationData, cell_idx: &CellIndex~2~, value: f32) void
+        +set_solid_border(data: &mut SimulationData) void
+        +set_solid_obstacle(data: &mut SimulationData) void
+        +precompute_edge_flow_from_solid_cells(data: &mut SimulationData) void
+    }
+    class src_simulation_pipeline_operator_SolverDescriptor {
+        +id: usize
+        +name: &'static str
+        +create: fn() -> Box~dyn PressureSolver~
+    }
+    class src_simulation_pipeline_operator_SolverRegistry {
+        -solvers: HashMap~usize, src_simulation_pipeline_operator_SolverDescriptor~
+        +new() Self
+        +register(solver_desc: src_simulation_pipeline_operator_SolverDescriptor) void
+        +create_solver(id: usize) Result~Box<dyn PressureSolver>, String~
+        +list_solver() Vec~(usize, &'static str)~
+        +get_solver_name(id: usize) Result~&'static str, String~
+    }
+    class src_simulation_pipeline_operator_VelocityProjector {
+        +get_pressure_gradient(data: src_simulation_SimulationData, face_idx: &FaceIndex~2~) f32
+    }
+    class src_simulation_pipeline_operator_SimulationOperator {
+        +execute(data: src_simulation_SimulationData, physical_constants: &PhysicalConstants, dt: f32) Result~u128, String~
+        +get_name() &'static str
+    }
+    class src_simulation_pipeline_operator_AdvectVelocity {
+    }
+    class src_simulation_pipeline_operator_SimulationOperator {
+        +execute(data: &mut SimulationData, _physical_constants: &PhysicalConstants, dt: f32) Result~u128, String~
+        +get_name() &'static str
+    }
+    class src_simulation_pipeline_SimulationPipeline {
+        -operations: Vec~Box<dyn operator::SimulationOperator>~
+        +selected_solver: SharedPressureSolver
+        +new(initial_solver: Box~dyn PressureSolver~) Self
+        +add_step(op: Box~dyn operator::SimulationOperator~) &mut Self
+        +run(data: src_simulation_SimulationData, physical_constants: &PhysicalConstants, dt: f32) Result~u128, String~
+        +set_solver(new_solver: Box~dyn PressureSolver~) Result~(), String~
+        +modify_solver_settings(settings: &SolverSettings) Result~(), String~
+        +solver_ref() SharedPressureSolver
+    }
+    class src_simulation_data_grid_BoundaryCondition {
+        +condition_type: ConditionType
+        +value: f32
+    }
+    class src_simulation_data_grid_Config {
+        +grid_size: Vec~usize~
+        +boundary_condition: Vec~src_simulation_data_grid_BoundaryCondition~
+        +delta_x: f32
+        +from_file(path: &str) Result~Self~
+    }
+    class src_simulation_data_grid_CellLayout~usize~ {
+        -dims: [usize; D]
+        -stride: [usize; D]
+        +new(cell_dimensions: [usize; D]) Self
+    }
+    class src_simulation_data_grid_GridLayout~usize~ {
+        +dimensions() [usize; D]
+        +stride() [usize; D]
+        +linearize(idx: &[usize; D]) usize
+        +dimensions() [usize; D]
+        +stride() [usize; D]
+        +linearize(idx: &[usize; D]) usize
+    }
+    class src_simulation_data_grid_FaceLayout~usize~ {
+        -dims: [usize; D]
+        -stride: [usize; D]
+        -axis: usize
+        +new(cell_dimensions: [usize; D], axis: usize) Self
+        +get_axis() usize
+    }
+    class src_simulation_data_grid_MultiIndex~usize~ {
+        -indices: [usize; D]
+        -lower: [usize; D]
+        -upper: [usize; D]
+        -done: bool
+        +new(size: &[usize; D]) Self
+        +set_lower_bound(self, axis: usize, lower_bound: usize) Self
+        +set_upper_bound(self, axis: usize, upper_bound: usize) Self
+        +restrict_axis(self, axis: usize, value: usize) Self
+        +exclude_border(self) Self
+        +next() Option~Self::Item~
+    }
+    class src_simulation_data_grid_FaceIndexIter~usize~ {
+        -inner: src_simulation_data_grid_MultiIndex~D~
+        -axis: usize
+        +new(size: [usize; D], axis: usize) Self
+        +set_lower_bound(self, axis: usize, lower_bound: usize) Self
+        +set_upper_bound(self, axis: usize, upper_bound: usize) Self
+        +restrict_axis(self, axis: usize, value: usize) Self
+        +exclude_border(self) Self
+        +next() Option~Self::Item~
+    }
+    class src_simulation_data_grid_TypedMultiIndex~T, usize~ {
+        -inner: src_simulation_data_grid_MultiIndex~D~
+        -_marker: PhantomData~T~
+        +new(size: &[usize; D]) Self
+        +set_lower_bound(self, axis: usize, lower_bound: usize) Self
+        +set_upper_bound(self, axis: usize, upper_bound: usize) Self
+        +restrict_axis(self, axis: usize, value: usize) Self
+        +exclude_border(self) Self
+        +next() Option~Self::Item~
+    }
+    class src_simulation_data_grid_CellIndex~usize~ {
+        +idx: [usize; D]
+    }
+    class src_simulation_data_grid_FromIndex~usize~ {
+        +from_index(idx: [usize; D]) Self
+        +from_index(idx: [usize; D]) Self
+    }
+    class src_simulation_data_grid_FaceIndex~usize~ {
+        +axis: usize
+        +idx: [usize; D]
+        +new(axis: usize, idx: [usize; D]) Self
+        +with_axis(self, axis: usize) Self
+    }
+    class src_simulation_data_Grid~usize~ {
+        -dx: [f32; D]
+        -dimensions: [usize; D]
+        +new(dim: [usize; D], dx: [f32; D]) Self
+        +all_cells() src_simulation_data_grid_TypedMultiIndex~CellIndex<D>, D~
+        +interior_cells() src_simulation_data_grid_TypedMultiIndex~CellIndex<D>, D~
+        +all_faces(axis: usize) src_simulation_data_grid_FaceIndexIter~D~
+        +interior_faces(axis: usize) src_simulation_data_grid_FaceIndexIter~D~
+        +succeeding_cells(cell_idx: &CellIndex~D~) Vec~(usize, CellIndex<D>)~
+        +preceeding_cells(cell_idx: &CellIndex~D~) Vec~(usize, CellIndex<D>)~
+        +get_face_indices(cell_idx: &CellIndex~D~, axis: usize) [FaceIndex~D~
+        +face_adjacent_cells(face_idx: &FaceIndex~D~) [CellIndex~D~
+        +border_cell_iter(axis: usize, start: bool) src_simulation_data_grid_TypedMultiIndex~CellIndex<D>, D~
+        +border_face_iter(axis: usize, start: bool) src_simulation_data_grid_FaceIndexIter~D~
+        +domain_boundary_face_iter() Vec~(usize, FaceIndexIter<D>)~
+        +get_delta_x() [f32; D]
+        +face_world_position(face: &FaceIndex~D~) [f32; D]
+        +cell_world_position(cell: &CellIndex~D~) [f32; D]
+    }
+    class src_simulation_data_Field~T, S, L~ {
+        +data: Vec~T~
+        -_marker: PhantomData~S~
+        +layout: L
+        +new(layout: &L) Self
+        +get(idx: &CellIndex~2~) &T
+        +set(idx: &CellIndex~2~, value: T) void
+        +sample(pos: [f32; 2], dx: [f32; 2]) f32
+        +sample_safe(i: isize, j: isize) &f32
+        +get(idx: &FaceIndex~2~) T
+        +set(idx: &FaceIndex~2~, value: T) void
+        +sample(pos: [f32; 2], dx: [f32; 2]) f32
+        +sample_safe(i: isize, j: isize) &f32
+    }
+    class src_simulation_SolverSettings {
+        +maxit: usize
+        +tolerance: f32
+    }
+    class src_simulation_Default {
+        +default() Self
+        +default() Self
+        +default() Self
+    }
+    class src_simulation_SimulationSettings {
+        +is_running: bool
+        +step: bool
+        +solver_id: usize
+        +solver_settings: src_simulation_SolverSettings
+        +utilize_gpu: bool
+    }
+    class src_simulation_PhysicalConstants {
+        +density: f32
+    }
+    class src_simulation_SimulationEngine {
+        -data: src_simulation_SimulationData
+        -solver_registry: src_simulation_pipeline_operator_SolverRegistry
+        -pipeline: src_simulation_pipeline_SimulationPipeline
+        -physical_constants: src_simulation_PhysicalConstants
+        -current_solver: usize
+        +new() Self
+        +step(settings: &SimulationSettings) void
+        +get_solver_registry() &SolverRegistry
+        +get_frame_data_view() src_simulation_FrameDataView
+    }
+    class src_simulation_FrameDataView {
+    }
+    class src_simulation_SimulationData {
+        +grid: src_simulation_data_Grid~2~
+        +pressure: CellField2F
+        +divergence: CellField2F
+        +smoke: CellField2F
+        +velocity: [FaceField2F; 2]
+        +is_solid: CellField2~bool~
+        +flow_edge_allowed: CellField2~i8~
+        +flow_edge_count: [CellField2~i8~
+        +new(dim: [usize; 2]) Self
+    }
+    src_gui_GUIState --> src_rendering_Renderer
+    src_gui_GUI --> src_gui_GUIState
+    src_rendering_renderer_scene_Scene ..> src_rendering_renderer_scene_InstanceId
+    src_rendering_renderer_scene_Scene ..> src_rendering_renderer_frame_rendering_PreparedFrame
+    src_rendering_renderer_scene_MeshData --> src_rendering_renderer_scene_Vertex
+    src_rendering_renderer_frame_rendering_DrawBatch --> src_rendering_renderer_scene_MeshId
+    src_rendering_renderer_frame_rendering_PreparedFrame --> src_rendering_renderer_scene_Instance
+    src_rendering_renderer_frame_rendering_PreparedFrame --> src_rendering_renderer_frame_rendering_DrawBatch
+    src_rendering_renderer_frame_rendering_Frame --> src_rendering_renderer_frame_rendering_PreparedFrame
+    src_rendering_renderer_frame_rendering_FrameDispatcher --> src_rendering_renderer_frame_rendering_DynamicBuffer
+    src_rendering_renderer_RenderGlobals --> src_rendering_renderer_Viewport
+    src_rendering_renderer_MeshRegistry --> src_rendering_renderer_scene_MeshId
+    src_rendering_renderer_MeshRegistry --> src_rendering_renderer_GPUMesh
+    src_rendering_renderer_MeshRegistry ..> src_rendering_renderer_scene_MeshId
+    src_rendering_sampler_VisualParameter --> src_rendering_sampler_ColorGradient
+    src_rendering_sampler_VisualParameter --> src_rendering_sampler_ColorGradient
+    src_rendering_sampler_VisualParameter --> src_rendering_sampler_ColorGradient
+    src_rendering_sampler_RenderSettings --> src_rendering_sampler_VisModeFields
+    src_rendering_Renderer --> src_rendering_renderer_RenderGlobals
+    src_rendering_Renderer --> src_rendering_renderer_scene_Scene
+    src_rendering_Renderer --> src_rendering_renderer_MeshRegistry
+    src_rendering_Renderer --> src_rendering_renderer_frame_rendering_FrameDispatcher
+    src_rendering_Renderer ..> src_rendering_renderer_scene_MeshId
+    src_rendering_Renderer ..> src_rendering_renderer_scene_InstanceId
+    src_rendering_Sampler --> src_rendering_sampler_VisualParameter
+    src_app_GPUContext --> src_rendering_renderer_scene_Instance
+    src_app_Application --> src_app_GPUContext
+    src_app_Application --> src_gui_GUI
+    src_app_Application --> src_rendering_Renderer
+    src_app_Application --> src_rendering_Sampler
+    src_app_Application --> src_app_WindowManager
+    src_app_Application --> src_simulation_SimulationEngine
+    src_app_Application --> src_simulation_SimulationSettings
+    src_app_Application --> src_rendering_sampler_RenderSettings
+    src_app_Application --> src_rendering_renderer_scene_MeshId
+    src_app_WindowManager --> src_app_WindowState
+    src_simulation_pipeline_operator_SolverRegistry --> src_simulation_pipeline_operator_SolverDescriptor
+    src_simulation_data_grid_Config --> src_simulation_data_grid_BoundaryCondition
+    src_simulation_data_grid_FaceIndexIter --> src_simulation_data_grid_MultiIndex
+    src_simulation_data_grid_TypedMultiIndex --> src_simulation_data_grid_MultiIndex
+    src_simulation_data_Grid ..> src_simulation_data_grid_TypedMultiIndex
+    src_simulation_data_Grid ..> src_simulation_data_grid_TypedMultiIndex
+    src_simulation_data_Grid ..> src_simulation_data_grid_FaceIndexIter
+    src_simulation_data_Grid ..> src_simulation_data_grid_FaceIndexIter
+    src_simulation_data_Grid ..> src_simulation_data_grid_TypedMultiIndex
+    src_simulation_data_Grid ..> src_simulation_data_grid_FaceIndexIter
+    src_simulation_SimulationSettings --> src_simulation_SolverSettings
+    src_simulation_SimulationEngine --> src_simulation_SimulationData
+    src_simulation_SimulationEngine --> src_simulation_pipeline_operator_SolverRegistry
+    src_simulation_SimulationEngine --> src_simulation_pipeline_SimulationPipeline
+    src_simulation_SimulationEngine --> src_simulation_PhysicalConstants
+    src_simulation_SimulationEngine ..> src_simulation_FrameDataView
+    src_simulation_SimulationData --> src_simulation_data_Grid

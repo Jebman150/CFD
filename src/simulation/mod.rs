@@ -1,137 +1,135 @@
-use crate::simulation::{data::SimulationData, pipeline::{SimulationPipeline, operator::{self, solver_registry::{SolverDescriptor, SolverRegistry}}}};
-use colored::*;
+
+use std::{collections::HashMap, sync::Arc};
+
+use data::{
+    SimulationData,
+    SimulationSettings,
+    grid::Grid2D,
+    ScalarField,
+    Frame
+};
+use wgpu::CommandEncoder;
+
+use crate::app::gpu_context::GPUContext;
+use gpu_backend::GPUSimulationEngine;
+use cpu_backend::CPUSimulationEngine;
+
+pub mod cpu_backend;
+pub mod gpu_backend;
 
 pub mod data;
-pub mod pipeline;
 
-#[derive(Debug)]
-pub struct SolverSettings {
-    pub maxit: usize,
-    pub tolerance: f32,
+trait SimulationBackend
+{
+    fn new(data: &SimulationData, gpu_context: Arc<GPUContext>) -> anyhow::Result<Self> where Self: Sized;
+    fn step(&mut self, settings: &SimulationSettings, frame: Frame);
+
+    fn get_solver_names(&self) -> HashMap<usize, &'static str>;
+    fn get_device(&self) -> BackendDevice;
 }
 
-impl Default for SolverSettings {
-    fn default() -> Self {
-        Self {
-            maxit: 1000,
-            tolerance: 0.005
-        }
-    }
+#[derive(Debug, Clone, strum_macros::IntoStaticStr, strum_macros::EnumIter, PartialEq, Eq)]
+pub enum BackendDevice {
+    None,
+    CPU,
+    GPU,
 }
 
-#[derive(Debug)]
-pub struct SimulationSettings {
-    pub is_running: bool,
-    pub step: bool,
-    pub solver_id: usize,
-    pub solver_settings: SolverSettings,
+pub struct Simulation {
+    gpu_context: Arc<GPUContext>,
+    settings: SimulationSettings,
+    state: SimulationData,
+    pub grid: Grid2D,
+    backend: Option<Box<dyn SimulationBackend>>,
 }
 
-impl Default for SimulationSettings {
-    fn default() -> Self {
-        Self {
-            solver_id: 1,
-            step: Default::default(),
-            is_running: false,
-            solver_settings: Default::default(),
-        }
-    }
-}
-
-pub struct PhysicalConstants {
-    pub density: f32,
-}
-
-impl Default for PhysicalConstants {
-    fn default() -> Self {
-        Self { density: 1.0 }
-    }
-}
-
-pub struct SimulationController {
-    pub data: SimulationData,
-    pub solver_registry: SolverRegistry,
-    pipeline: SimulationPipeline,
-
-    physical_constants: PhysicalConstants,
-    current_solver: usize,
-}
-
-impl SimulationController {
-    pub fn new() -> Self {
-        let mut solver_registry = SolverRegistry::new();
-        solver_registry.register(
-            SolverDescriptor {
-                id: 1,
-                name: "Conjugate Gradient",
-                create: operator::pressure_solution::cg_solver
-            }
-        );
-        solver_registry.register(
-            SolverDescriptor {
-                id: 2,
-                name: "Gauss Seidel",
-                create: operator::pressure_solution::gs_solver
-            }
-        );
-
-        let grid_size = [78, 56];
-        let mut data = SimulationData::new(grid_size);
-        operator::set_solid_cells_startup(&mut data);
-        
-        let mut pipeline = SimulationPipeline::new(
-            operator::pressure_solution::cg_solver()
-        );
-        let solver_ref = pipeline.solver_ref();
-
-        pipeline.add_step(operator::advect_velocities())
-            .add_step(operator::apply_boundary_condition())
-            .add_step(operator::apply_internal_condition())
-            .add_step(operator::compute_divergence())
-            .add_step(operator::pressure_solver(solver_ref))
-            .add_step(operator::project_velocities())
-            .add_step(operator::apply_internal_condition())
-            .add_step(operator::compute_divergence())
-            .add_step(operator::divergence_check());
-
+impl Simulation {
+    pub fn new(gpu_context: Arc<GPUContext>) -> Self {
+        let default_settings = SimulationSettings::default();
 
         Self {
-            data: data,
-            pipeline,
-            solver_registry,
-            physical_constants: Default::default(),
-            current_solver: 1,
+            state: SimulationData::new(&gpu_context, default_settings.grid_size),
+            grid: Grid2D::new(default_settings.grid_size, default_settings.dx),
+            settings: default_settings,
+            backend: None,
+            gpu_context,
         }
     }
 
-    pub fn step(&mut self, settings: &SimulationSettings) {
-        if settings.solver_id != self.current_solver {
-            match self.solver_registry.create_solver(settings.solver_id) {
-                Err(msg) => println!("{}", format!("ERROR: {}", msg).red()),
-                Ok(new_solver) => {
-                    match self.pipeline.set_solver(new_solver) {
-                        Err(msg) => println!("{}", format!("ERROR: {}", msg).red()),
-                        Ok(()) => {},
-                    };
-                    self.current_solver = settings.solver_id;
-                    println!("{}", format!("Changed solver to {}", self.solver_registry.get_solver_name(settings.solver_id).unwrap()).blue());
-                }
+    pub fn switch_to_gpu_backend(&mut self) -> anyhow::Result<()> {
+        if let Some(existing_backend) = &self.backend {
+            if existing_backend.get_device() == BackendDevice::GPU {
+                return Ok(())
             }
         }
-        if !settings.is_running && !settings.step {
+
+        self.backend = Some(Box::new(
+            GPUSimulationEngine::new(&self.state, self.gpu_context.clone())?
+        ));
+        tracing::info!("Switched to GPU");
+
+        return Ok(());
+    }
+
+    pub fn switch_to_cpu_backend(&mut self) -> anyhow::Result<()> {
+        if let Some(existing_backend) = &self.backend {
+            if existing_backend.get_device() == BackendDevice::CPU {
+                return Ok(())
+            }
+        }
+
+        self.backend = Some(Box::new(
+            CPUSimulationEngine::new(&self.state, self.gpu_context.clone())?
+        ));
+        tracing::info!("Switched to CPU");
+
+        return Ok(());
+    }
+
+    pub fn update(&mut self, encoder: &mut CommandEncoder, rendered_field: ScalarField) {
+        if !self.settings.is_running && !self.settings.step {
             return;
         }
-        match self.pipeline.modify_solver_settings(&settings.solver_settings) {
-            Err(msg) => println!("{}", format!("ERROR: {}", msg).red()),
-            Ok(()) => {},
+
+        let result = match self.settings.device {
+            BackendDevice::CPU => self.switch_to_cpu_backend(),
+            BackendDevice::GPU => self.switch_to_gpu_backend(),
+            BackendDevice::None => {self.backend = None; return;},
         };
-        
-
-        let dt = 0.01f32;
-
-        match self.pipeline.run(&mut self.data, &self.physical_constants, dt) {
-            Err(msg) => println!("{}", format!("ERROR: Could not execute pipeline: {}", msg).red()),
-            Ok(_time) => {},// println!("{}", format!("Pipeline succeeded after {} micros", time).green()),
+        if result.is_err() {
+            tracing::error!("Could not use specified device {}: {:#?}", <&str>::from(self.settings.device.clone()), result);
+            return;
         }
+
+        let Some(backend) = self.backend.as_mut() else {
+            return;
+        };
+
+        let frame = Frame {
+            data: &mut self.state,
+            command_encoder: encoder,
+            rendered_field: rendered_field,
+        };
+
+        backend.step(&self.settings, frame);
+    }
+
+    pub fn settings_mut(&mut self) -> &mut SimulationSettings {
+        &mut self.settings
+    }
+
+    pub fn settings(&self) -> &SimulationSettings {
+        &self.settings
+    }
+
+    pub fn state_ref(&self) -> &SimulationData {
+        &self.state
+    }
+
+    pub fn get_solver_names(&self) -> HashMap<usize, &'static str> {
+        let Some(existing_backend) = &self.backend else {
+            return HashMap::new();
+        };
+        existing_backend.get_solver_names()
     }
 }
