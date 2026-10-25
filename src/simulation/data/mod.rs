@@ -62,7 +62,7 @@ impl SimulationData {
         let is_solid = gpu_context.device.create_buffer(
             &BufferDescriptor{
                 label: Some("IsSolid Buffer"),
-                size: std::mem::size_of::<bool>() as u64 * cell_count as u64,
+                size: std::mem::size_of::<u32>() as u64 * cell_count as u64,
                 usage: BufferUsages::COPY_DST | BufferUsages::STORAGE,
                 mapped_at_creation: false,
             }
@@ -142,7 +142,7 @@ impl Default for SimulationSettings {
             step: Default::default(),
             is_running: false,
             solver_settings: Default::default(),
-            device: BackendDevice::CPU,
+            device: BackendDevice::GPU,
         }
     }
 }

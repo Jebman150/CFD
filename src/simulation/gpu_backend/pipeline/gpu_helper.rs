@@ -5,6 +5,7 @@ use wgpu::{BindGroup, BindGroupLayout, BindGroupLayoutEntry, ComputePipeline, De
 
 use crate::simulation::gpu_backend::pipeline::operator::SimulationOperator;
 
+#[derive(Debug, Clone)]
 pub struct ComputeKernel {
     name: &'static str,
     pipeline: Option<ComputePipeline>,
@@ -94,9 +95,31 @@ impl SimulationOperator for ComputeKernel {
 
 pub struct MultiStageKernel {
     name: &'static str,
+    preprocessor: Vec<ComputeKernel>,
     stages: Vec<ComputeKernel>,
+    postprocessor: Vec<ComputeKernel>,
     iteration_count: usize,
     helper_buffer: HashMap<usize, wgpu::Buffer>,
+}
+
+impl MultiStageKernel {
+    pub fn new(
+        name: &'static str,
+        preprocessor: Vec<ComputeKernel>, 
+        stages: Vec<ComputeKernel>,
+        postprocessor: Vec<ComputeKernel>,
+        iterations: usize,
+        helper_buffers: HashMap<usize, wgpu::Buffer>
+    ) -> Self {
+        Self {
+            name,
+            preprocessor,
+            stages,
+            postprocessor,
+            iteration_count: iterations,
+            helper_buffer: helper_buffers,
+        }
+    }
 }
 
 impl SimulationOperator for MultiStageKernel {
@@ -104,10 +127,16 @@ impl SimulationOperator for MultiStageKernel {
         &self,
         encoder: &mut wgpu::CommandEncoder
     ) -> anyhow::Result<()> {
+        for prep in &self.preprocessor {
+            prep.encode(encoder)?;
+        }
         for _iter in 0..self.iteration_count {
             for stage in &self.stages {
-                stage.encode(encoder);
+                stage.encode(encoder)?;
             }
+        }
+        for postp in &self.postprocessor {
+            postp.encode(encoder)?;
         }
         Ok(())
     }

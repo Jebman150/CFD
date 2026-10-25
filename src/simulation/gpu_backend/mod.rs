@@ -3,7 +3,7 @@ use std::{collections::HashMap, sync::Arc};
 
 use wgpu::BufferUsages;
 
-use crate::{app::gpu_context::GPUContext, simulation::{data::{Frame, PhysicalConstants, SimulationData}, gpu_backend::pipeline::{SimulationPipeline, operator::{self, Parameter, SimulationOperator, solver_registry::{SolverDescriptor, SolverRegistry}}}}};
+use crate::{app::gpu_context::GPUContext, simulation::{data::{Frame, PhysicalConstants, SimulationData}, gpu_backend::pipeline::{SimulationPipeline, operator::{self, Parameter, solver_registry::{SolverDescriptor, SolverRegistry}}}}};
 
 mod pipeline;
 
@@ -68,7 +68,7 @@ impl super::SimulationBackend for GPUSimulationEngine {
             //.add_step(operator::apply_boundary_condition())
             //.add_step(operator::apply_internal_condition())
             .add_step(operator::divergence_computation::construct_divergence_calculator_kernel(&gpu_context.device, data, &parameter_buffer)?)
-            //.add_step(operator::pressure_solver(solver_ref))
+            .add_step(operator::pressure_solution::construct_cg_solver_kernel(&gpu_context.device, data, &parameter_buffer)?)
             .add_step(operator::velocity_projection::construct_velocity_projection_kernel(&gpu_context.device, data, &parameter_buffer)?)
             .add_step(operator::velocity_projection::construct_velocity_abs_val_kernel(&gpu_context.device, data, &parameter_buffer)?);
             //.add_step(operator::apply_internal_condition())
@@ -98,6 +98,8 @@ impl super::SimulationBackend for GPUSimulationEngine {
         
         let dt = 0.01f32;
 
+        let cell_num = frame.data.grid.get_dimensions()[0] * frame.data.grid.get_dimensions()[1];
+        
         self.gpu_context.queue.write_buffer(
             &self.parameter_buffer,
             0,
@@ -118,6 +120,12 @@ impl super::SimulationBackend for GPUSimulationEngine {
             &frame.data.velocity[1], 0, 
             &self.velocity_temp_buffers[1], 0, 
             frame.data.velocity[1].size()
+        );
+
+        self.gpu_context.queue.write_buffer(
+            &frame.data.is_solid,
+            0,
+            bytemuck::cast_slice(&vec![0.0 as u32; cell_num])
         );
 
         match self.pipeline.run(&mut frame) {

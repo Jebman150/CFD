@@ -46,9 +46,11 @@ fn main(
     // Write one partial sum per workgroup
     // -----------------------------------
 
-    if (local_i == 0u && n > 64) {
-        partial_output[workgroup_id.x + 1] = cache[0];
-    } else if (n <= 64) {
-        partial_output[0] = cache[0];
+    if (local_i == 0u) {
+        if (n > 64u) {
+            partial_output[workgroup_id.x + 1u] = cache[0];
+        } else if (workgroup_id.x == 0u) {
+            partial_output[0] = cache[0];
+        }
     }
 }

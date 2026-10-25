@@ -118,7 +118,7 @@ impl RenderSettings {
             render_hr_field: false,
             render_velocity_debug: false,
 
-            rendered_scalar_field: None,
+            rendered_scalar_field: Some(ScalarField::Velocity),
             visuals: VisualParameter::default(device),
         }
     }
