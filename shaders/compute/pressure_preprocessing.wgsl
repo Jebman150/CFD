@@ -34,7 +34,7 @@ var<storage, read_write> cg_vars: CGVars;
 var<storage, read_write> reduction_input: array<f32>;
 
 @group(0) @binding(7)
-var<storage, read_write> x: array<f32>;
+var<storage, read_write> p: array<f32>;
 
 @compute @workgroup_size(64)
 fn process_divergence(
@@ -51,8 +51,8 @@ fn process_divergence(
     let scaled = d * parameter.density / parameter.dt;
 
     divergence[i] = scaled;
-    pressure[i] = scaled;
-    x[i] = 0.0;
+    pressure[i] = 0.0;
+    p[i] = scaled;
     r[i] = scaled;
     reduction_input[i+1] = scaled * scaled;
     if i == 0{

@@ -9,13 +9,14 @@ pub mod velocity_projection;
 
 pub mod solver_registry;
 
-#[repr(C)]
+#[repr(C, align(16))]
 #[derive(Debug, Clone, Copy, bytemuck::Zeroable, bytemuck::Pod)]
 pub struct Parameter {
     pub grid_size: [u32; 2],
     pub dx: [f32; 2],
     pub density: f32,
     pub dt: f32,
+    pub padding: [u32; 2],
 }
 
 pub trait SimulationOperator {

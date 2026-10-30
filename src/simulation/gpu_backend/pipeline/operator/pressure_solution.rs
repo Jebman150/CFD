@@ -33,8 +33,8 @@ pub fn construct_cg_solver_kernel(
         mapped_at_creation: false,
     });
 
-    let x = device.create_buffer(&wgpu::BufferDescriptor{
-        label: Some("x helper buffer"),
+    let p = device.create_buffer(&wgpu::BufferDescriptor{
+        label: Some("p helper buffer"),
         size: (std::mem::size_of::<f32>() * cell_num) as u64,
         usage: BufferUsages::STORAGE,
         mapped_at_creation: false,
@@ -68,7 +68,7 @@ pub fn construct_cg_solver_kernel(
     )?;
 
     let divergence_preprocessor_kernel = gpu_solver::conjugate_gradient::construct_divergence_preprocessing_kernel(
-        device, data, parameter_buffer, &r, &partial1, &x
+        device, data, parameter_buffer, &r, &partial1, &p
     )?;
 
     let cg_vars_initializer_kernel = gpu_solver::conjugate_gradient::construct_cg_vars_initializer_kernel(
@@ -91,15 +91,15 @@ pub fn construct_cg_solver_kernel(
     preprocessor.push(cg_vars_initializer_kernel);
 
     let apply_kernel = gpu_solver::conjugate_gradient::construct_apply_kernel(
-        device, data, parameter_buffer, &ap_product, &partial1
+        device, data, parameter_buffer, &p, &ap_product, &partial1
     )?;
 
     let update_xr_kernel = gpu_solver::conjugate_gradient::construct_update_xr_kernel(
-        device, data, &ap_product, reduction_output, &x, &r, &cg_vars, &partial1
+        device, data, &ap_product, reduction_output, &p, &r, &cg_vars, &partial1
     )?;
 
     let update_p_kernel = gpu_solver::conjugate_gradient::construct_update_p_kernel(
-        device, data, reduction_output, &r, &cg_vars
+        device, data, reduction_output, &p, &r, &cg_vars
     )?;
 
     let mut stages = Vec::new();
@@ -127,19 +127,11 @@ pub fn construct_cg_solver_kernel(
     }
     stages.push(update_p_kernel);
 
-    let read_back_solution_kernel = gpu_solver::conjugate_gradient::construct_copy_back_solution_kernel(
-        device, data, &x
-    )?;
-
-    let postprocessor = vec![
-        read_back_solution_kernel
-    ];
-
     let mut buffer_map = HashMap::new();
     buffer_map.insert(0, ap_product);
     buffer_map.insert(1, partial1);
     buffer_map.insert(2, partial2);
-    buffer_map.insert(3, x);
+    buffer_map.insert(3, p);
     buffer_map.insert(4, r);
     buffer_map.insert(5, cg_vars);
 
@@ -147,7 +139,7 @@ pub fn construct_cg_solver_kernel(
         "Conjugate Gradient Kernel",
         preprocessor,
         stages,
-        postprocessor,
+        vec![],
         100,
         buffer_map
     )))

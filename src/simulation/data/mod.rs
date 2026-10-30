@@ -1,7 +1,7 @@
 use std::{collections::HashMap, sync::Arc};
 
 use strum::IntoEnumIterator;
-use wgpu::{BufferDescriptor, BufferUsages, CommandEncoder};
+use wgpu::{BufferDescriptor, BufferUsages, CommandEncoder, CommandEncoderDescriptor};
 
 use crate::{app::gpu_context::GPUContext, simulation::BackendDevice};
 

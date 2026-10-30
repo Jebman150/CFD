@@ -14,7 +14,7 @@ pub fn construct_divergence_preprocessing_kernel(
     data: &SimulationData,
     parameter_buffer: &wgpu::Buffer,
     r: &wgpu::Buffer,
-    x: &wgpu::Buffer,
+    p: &wgpu::Buffer,
     reduction_input: &wgpu::Buffer
 ) -> anyhow::Result<ComputeKernel> {
     let mut layout_buffer_entries = Vec::new();
@@ -39,7 +39,7 @@ pub fn construct_divergence_preprocessing_kernel(
                 (2, data.scalar_fields.get(&ScalarField::Pressure).ok_or(Error::msg("No pressure field initialized!"))?),
                 (4, r),
                 (6, reduction_input),
-                (7, x)
+                (7, p)
             ],
             cell_num,
         )
@@ -73,15 +73,15 @@ pub fn construct_apply_kernel(
     device: &std::sync::Arc<wgpu::Device>,
     data: &SimulationData,
     parameter_buffer: &wgpu::Buffer,
+    p: &wgpu::Buffer,
     ap: &wgpu::Buffer,
     reduction_input: &wgpu::Buffer,
 ) -> anyhow::Result<ComputeKernel> {
     let mut layout_buffer_entries = Vec::new();
-    gpu_helper::add_layout_buffer(&mut layout_buffer_entries, 0, false);
-    gpu_helper::add_layout_buffer(&mut layout_buffer_entries, 1, false);
     gpu_helper::add_layout_uniform(&mut layout_buffer_entries, 2);
     gpu_helper::add_layout_buffer(&mut layout_buffer_entries, 3, true);
     gpu_helper::add_layout_buffer(&mut layout_buffer_entries, 5, false);
+    gpu_helper::add_layout_buffer(&mut layout_buffer_entries, 10, false);
     gpu_helper::add_layout_buffer(&mut layout_buffer_entries, 11, false);
 
     let cell_num = data.grid.get_dimensions()[0] * data.grid.get_dimensions()[1];
@@ -93,11 +93,10 @@ pub fn construct_apply_kernel(
             "apply",
             &layout_buffer_entries,
             &vec![
-                (0, data.scalar_fields.get(&ScalarField::Pressure).ok_or(Error::msg("No pressure field initialized!"))?),
-                (1, data.scalar_fields.get(&ScalarField::Divergence).ok_or(Error::msg("No divergence field initialized!"))?),
                 (2, parameter_buffer),
                 (3, &data.is_solid),
                 (5, ap),
+                (10, p),
                 (11, reduction_input)
             ],
             cell_num,
@@ -135,7 +134,7 @@ pub fn construct_update_xr_kernel(
     data: &SimulationData,
     ap_product: &wgpu::Buffer,
     reduction_output: &wgpu::Buffer,
-    x: &wgpu::Buffer,
+    p: &wgpu::Buffer,
     r: &wgpu::Buffer,
     cg_vars: &wgpu::Buffer,
     reduction_input: &wgpu::Buffer,
@@ -163,7 +162,7 @@ pub fn construct_update_xr_kernel(
                 (6, r),
                 (8, cg_vars),
                 (9, reduction_output),
-                (10, x),
+                (10, p),
                 (11, reduction_input)
             ],
             cell_num,
@@ -174,14 +173,15 @@ pub fn construct_update_p_kernel(
     device: &std::sync::Arc<wgpu::Device>,
     data: &SimulationData,
     reduction_output: &wgpu::Buffer,
+    p: &wgpu::Buffer,
     r: &wgpu::Buffer,
     cg_vars: &wgpu::Buffer,
 ) -> anyhow::Result<ComputeKernel> {
     let mut layout_buffer_entries = Vec::new();
-    gpu_helper::add_layout_buffer(&mut layout_buffer_entries, 0, false);
     gpu_helper::add_layout_buffer(&mut layout_buffer_entries, 6, false);
     gpu_helper::add_layout_buffer(&mut layout_buffer_entries, 7, true);
     gpu_helper::add_layout_buffer(&mut layout_buffer_entries, 8, false);
+    gpu_helper::add_layout_buffer(&mut layout_buffer_entries, 10, false);
 
     let cell_num = data.grid.get_dimensions()[0] * data.grid.get_dimensions()[1];
 
@@ -192,35 +192,10 @@ pub fn construct_update_p_kernel(
             "update_p",
             &layout_buffer_entries,
             &vec![
-                (0,data.scalar_fields.get(&ScalarField::Pressure).ok_or(Error::msg("No pressure field initialized!"))?),
                 (6, r),
                 (7, reduction_output),
                 (8, cg_vars),
-            ],
-            cell_num,
-        )
-}
-
-pub fn construct_copy_back_solution_kernel(
-    device: &std::sync::Arc<wgpu::Device>,
-    data: &SimulationData,
-    x: &wgpu::Buffer
-) -> anyhow::Result<ComputeKernel> {
-    let mut layout_buffer_entries = Vec::new();
-    gpu_helper::add_layout_buffer(&mut layout_buffer_entries, 0, false);
-    gpu_helper::add_layout_buffer(&mut layout_buffer_entries, 1, true);
-
-    let cell_num = data.grid.get_dimensions()[0] * data.grid.get_dimensions()[1];
-
-    ComputeKernel::new("Solution read back")
-        .build_pipeline(
-            device,
-            "shaders/compute/pressure_postprocessing.wgsl",
-            "read_back_solution",
-            &layout_buffer_entries,
-            &vec![
-                (0,data.scalar_fields.get(&ScalarField::Pressure).ok_or(Error::msg("No pressure field initialized!"))?),
-                (1, x),
+                (10, p)
             ],
             cell_num,
         )

@@ -65,12 +65,14 @@ impl super::SimulationBackend for GPUSimulationEngine {
         let mut pipeline = SimulationPipeline::new();
 
         pipeline.add_step(operator::advection::construct_velocity_avection_kernel(&gpu_context.device, data, &velocity_temp_buffers, &parameter_buffer)?)
-            //.add_step(operator::apply_boundary_condition())
+            //.add_step(operator::boundary_condition::construct_boundary_condition_kernel(&gpu_context.device, data, &parameter_buffer)?)
             //.add_step(operator::apply_internal_condition())
             .add_step(operator::divergence_computation::construct_divergence_calculator_kernel(&gpu_context.device, data, &parameter_buffer)?)
             .add_step(operator::pressure_solution::construct_cg_solver_kernel(&gpu_context.device, data, &parameter_buffer)?)
             .add_step(operator::velocity_projection::construct_velocity_projection_kernel(&gpu_context.device, data, &parameter_buffer)?)
-            .add_step(operator::velocity_projection::construct_velocity_abs_val_kernel(&gpu_context.device, data, &parameter_buffer)?);
+            .add_step(operator::velocity_projection::construct_velocity_abs_val_kernel(&gpu_context.device, data, &parameter_buffer)?)
+            //.add_step(operator::boundary_condition::construct_boundary_condition_kernel(&gpu_context.device, data, &parameter_buffer)?)
+            .add_step(operator::divergence_computation::construct_divergence_calculator_kernel(&gpu_context.device, data, &parameter_buffer)?);
             //.add_step(operator::apply_internal_condition())
             //.add_step(operator::compute_divergence())
             //.add_step(operator::divergence_check());
@@ -98,17 +100,22 @@ impl super::SimulationBackend for GPUSimulationEngine {
         
         let dt = 0.01f32;
 
-        let cell_num = frame.data.grid.get_dimensions()[0] * frame.data.grid.get_dimensions()[1];
+        let dim_x = frame.data.grid.get_dimensions()[0];
+        let dim_y = frame.data.grid.get_dimensions()[1];
+        let cell_num = dim_x * dim_y;
         
-        self.gpu_context.queue.write_buffer(
-            &self.parameter_buffer,
-            0,
-            bytemuck::bytes_of(&Parameter {
+        let parameter = Parameter {
                 grid_size: frame.data.grid.get_dimensions().map(|d| d as u32),
                 dx: frame.data.grid.get_delta_x(),
                 density: self.physical_constants.density,
                 dt,
-            })
+                padding: [0; 2]
+            };
+
+        self.gpu_context.queue.write_buffer(
+            &self.parameter_buffer,
+            0,
+            bytemuck::bytes_of(&parameter)
         );
 
         frame.command_encoder.copy_buffer_to_buffer(
@@ -125,7 +132,7 @@ impl super::SimulationBackend for GPUSimulationEngine {
         self.gpu_context.queue.write_buffer(
             &frame.data.is_solid,
             0,
-            bytemuck::cast_slice(&vec![0.0 as u32; cell_num])
+            bytemuck::cast_slice(&is_solid_vec(dim_x, dim_y))
         );
 
         match self.pipeline.run(&mut frame) {
@@ -142,4 +149,16 @@ impl super::SimulationBackend for GPUSimulationEngine {
     fn get_device(&self) -> super::BackendDevice {
         super::BackendDevice::GPU
     }
+}
+
+fn is_solid_vec(dim_x: usize, dim_y: usize) -> Vec<u32> {
+    let cell_num = dim_x * dim_y;
+    let mut result = vec![0 as u32; cell_num];
+    for x in 0..dim_x {
+        result[x] = 1;
+    }
+    for x in 0..dim_x {
+        result[(dim_y - 1) * dim_x + x] = 1;
+    }
+    result
 }

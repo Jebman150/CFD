@@ -138,7 +138,7 @@ impl Application {
         command_buffer.push(encoder.finish());
         self.gpu_context.queue.submit(command_buffer);
         self.gpu_context.queue.present(frame);
-
+        
         puffin::GlobalProfiler::lock().new_frame();
     }
 
@@ -148,6 +148,44 @@ impl Application {
             _ => {}
         }
     }
+}
+
+pub fn read_back_data<T: bytemuck::Pod>(gpu_context: &crate::app::gpu_context::GPUContext, buffer: &wgpu::Buffer, out: &mut [T]) {
+    let staging_buffer = gpu_context.device.create_buffer(&wgpu::BufferDescriptor {
+        label: Some("Staging buffer"),
+        size: buffer.size(),
+        usage: wgpu::BufferUsages::MAP_READ | wgpu::BufferUsages::COPY_DST,
+        mapped_at_creation: false,
+    });
+    let mut encoder = gpu_context.device.create_command_encoder(&wgpu::CommandEncoderDescriptor{
+        label: Some("Readback encoder"),
+    });
+
+    encoder.copy_buffer_to_buffer(
+        buffer,
+        0,
+        &staging_buffer,
+        0,
+        buffer.size(),
+    );
+
+    gpu_context.queue.submit(Some(encoder.finish()));
+
+    let buffer_slice = staging_buffer.slice(..);
+
+    buffer_slice.map_async(wgpu::MapMode::Read, |_| {});
+
+    let _ = gpu_context.device.poll(wgpu::PollType::Wait {
+        submission_index: None,
+        timeout: None
+    });
+
+    let data = buffer_slice.get_mapped_range().unwrap();
+
+    out.copy_from_slice(bytemuck::cast_slice(&data));
+
+    drop(data);
+    staging_buffer.unmap();
 }
 
 impl ApplicationHandler for Application {
