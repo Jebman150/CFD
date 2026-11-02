@@ -1,12 +1,13 @@
 use std::{collections::HashMap, sync::Arc};
 
 use anyhow::Error;
-use wgpu::{BindGroup, BindGroupLayoutEntry, ComputePipeline, Device};
+use wgpu::{BindGroup, BindGroupLayoutEntry, CommandEncoder, ComputePipeline, Device};
 
-use crate::ParamID;
+use crate::{ParamID, SimulationState, gpu::kernel_resources::{self, BufferCopy, ParameterResource}};
 
 use super::init_helper;
 
+#[derive(Debug, Clone)]
 pub struct ParameterLayout {
     f32_params: Vec<ParamID>,
     u32_params: Vec<ParamID>,
@@ -53,7 +54,7 @@ pub trait ComputeKernel {
 
     fn get_name(&self) -> &'static str;
 
-    fn get_helper_buffer(&self) -> &[wgpu::Buffer];
+    fn update_resources(&self, state: &SimulationState, command_encoder: &mut CommandEncoder);
 }
 
 #[derive(Debug, Clone)]
@@ -61,7 +62,8 @@ pub struct LeafKernel {
     name: &'static str,
     pipeline: Option<ComputePipeline>,
     bind_group: Option<BindGroup>,
-    helper_buffer: Vec<wgpu::Buffer>,
+    parameter: Option<kernel_resources::ParameterResource>,
+    buffer_copies: Vec<kernel_resources::BufferCopy>,
     work_size: u64,
 }
 
@@ -71,7 +73,8 @@ impl LeafKernel {
             name,
             pipeline: None,
             bind_group: None,
-            helper_buffer: Vec::new(),
+            parameter: None,
+            buffer_copies: Vec::new(),
             work_size: 0,
         }
     }
@@ -119,8 +122,13 @@ impl LeafKernel {
         Ok(self)
     }
 
-    pub fn save_helper_buffer(mut self, buffer: wgpu::Buffer) -> Self {
-        self.helper_buffer.push(buffer);
+    pub fn add_parameter_resource(mut self, resource: ParameterResource) -> Self {
+        self.parameter = Some(resource);
+        self
+    }
+
+    pub fn add_buffer_copy(mut self, resource: BufferCopy) -> Self {
+        self.buffer_copies.push(resource);
         self
     }
 }
@@ -153,8 +161,13 @@ impl ComputeKernel for LeafKernel {
         &self.name
     }
     
-    fn get_helper_buffer(&self) -> &[wgpu::Buffer] {
-        &self.helper_buffer
+    fn update_resources(&self, state: &SimulationState, command_encoder: &mut CommandEncoder) {
+        if let Some(params) = &self.parameter {
+            params.update(state.parameter_ref());
+        }
+        for cp in &self.buffer_copies {
+            cp.encode_update(command_encoder);
+        }
     }
     
 }
@@ -211,9 +224,7 @@ impl ComputeKernel for MultiStageKernel {
         &self.name
     }
     
-    fn get_helper_buffer(&self) -> &[wgpu::Buffer] {
+    fn update_resources(&self, state: &SimulationState, command_encoder: &mut CommandEncoder) {
         todo!()
     }
-
-    
 }

@@ -1,0 +1,62 @@
+2026-10-31T16:24:58.776363Z  INFO integration_test::kernels::scalar_advection: Testing scalar advection kernel for case [512, 512], seed 54321
+2026-10-31T16:24:58.776756Z DEBUG new{gpu_context=GPUContext { instance: Instance { inner: Core(ContextWgpuCore { type: "Native" }) }, adapter: Adapter { inner: Core(CoreAdapter { context: ContextWgpuCore { type: "Native" }, id: AdapterId(0,1) }) }, device: Device { inner: Core(CoreDevice { context: ContextWgpuCore { type: "Native" }, id: DeviceId(0,1), error_sink: Mutex { data: ErrorSink }, features: Features { features_wgpu: FeaturesWGPU(POLYGON_MODE_LINE), features_webgpu: FeaturesWebGPU(0x0) } }) }, queue: Queue { inner: Core(CoreQueue { context: ContextWgpuCore { type: "Native" }, id: QueueId(0,1), error_sink: Mutex { data: ErrorSink } }) } }}: engine::engine: Creating new simulation engine
+2026-10-31T16:24:58.776810Z DEBUG new{gpu_context=GPUContext { instance: Instance { inner: Core(ContextWgpuCore { type: "Native" }) }, adapter: Adapter { inner: Core(CoreAdapter { context: ContextWgpuCore { type: "Native" }, id: AdapterId(0,1) }) }, device: Device { inner: Core(CoreDevice { context: ContextWgpuCore { type: "Native" }, id: DeviceId(0,1), error_sink: Mutex { data: ErrorSink }, features: Features { features_wgpu: FeaturesWGPU(POLYGON_MODE_LINE), features_webgpu: FeaturesWebGPU(0x0) } }) }, queue: Queue { inner: Core(CoreQueue { context: ContextWgpuCore { type: "Native" }, id: QueueId(0,1), error_sink: Mutex { data: ErrorSink } }) } }}: engine::state: Initializing simulation state
+2026-10-31T16:24:58.776849Z DEBUG engine::state::fields: Creating field with 262144 elements
+2026-10-31T16:24:58.776859Z DEBUG engine::state::fields: Dimensions: [512, 512]
+2026-10-31T16:24:58.795700Z DEBUG engine::state: Inserted new scalar field with id 0
+2026-10-31T16:24:58.795773Z DEBUG engine::state:  - SI Units:    m^-1 kg^1 s^-2 
+2026-10-31T16:24:58.795791Z DEBUG engine::state:  - Size:        [512, 512]
+2026-10-31T16:24:58.795805Z DEBUG engine::state::fields: Creating field with 262656 elements
+2026-10-31T16:24:58.795817Z DEBUG engine::state::fields: Dimensions: [513, 512]
+2026-10-31T16:24:58.795883Z DEBUG engine::state::fields: Creating field with 262656 elements
+2026-10-31T16:24:58.795901Z DEBUG engine::state::fields: Dimensions: [512, 513]
+2026-10-31T16:24:58.795942Z DEBUG engine::state: Inserted new scattered vector field with id 0
+2026-10-31T16:24:58.795958Z DEBUG engine::state:  - SI Units:    m^1 s^-1 
+2026-10-31T16:24:58.795972Z DEBUG engine::state:  - U Size:        [513, 512]
+2026-10-31T16:24:58.795984Z DEBUG engine::state:  - V Size:        [512, 513]
+2026-10-31T16:24:58.795996Z DEBUG engine::state::parameter_registry: Registered u32 parameter with id ParamID(0) and dimensions 
+2026-10-31T16:24:58.796009Z DEBUG engine::state::parameter_registry: Registered u32 parameter with id ParamID(1) and dimensions 
+2026-10-31T16:24:58.796023Z DEBUG engine::state::parameter_registry: Registered f32 parameter with id ParamID(2) and dimensions m^1 
+2026-10-31T16:24:58.796036Z DEBUG engine::state::parameter_registry: Registered f32 parameter with id ParamID(3) and dimensions m^1 
+2026-10-31T16:24:58.796051Z DEBUG engine::state::parameter_registry: Registered f32 parameter with id ParamID(4) and dimensions s^1 
+2026-10-31T16:24:59.055860Z DEBUG engine::state::fields: Creating field with 262144 elements
+2026-10-31T16:24:59.056039Z DEBUG engine::state::fields: Dimensions: [512, 512]
+2026-10-31T16:24:59.056231Z DEBUG engine::state: Inserted new scalar field with id 1
+2026-10-31T16:24:59.056244Z DEBUG engine::state:  - SI Units:    
+2026-10-31T16:24:59.056251Z DEBUG engine::state:  - Size:        [512, 512]
+2026-10-31T16:24:59.064194Z DEBUG engine::engine: Validating engine...
+2026-10-31T16:24:59.064330Z DEBUG engine::engine: Validation successfull!
+2026-10-31T16:24:59.069961Z DEBUG engine::engine: Executing kernel KernelID(0)
+2026-10-31T16:24:59.070065Z  INFO engine::gpu::kernel_resources: Updating buffer copy
+2026-10-31T16:24:59.071032Z DEBUG engine::engine: Done
+2026-10-31T16:26:31.988384Z  INFO integration_test::kernels::scalar_advection: Testing scalar advection kernel for case [512, 512], seed 54321
+2026-10-31T16:26:31.988599Z DEBUG new{gpu_context=GPUContext { instance: Instance { inner: Core(ContextWgpuCore { type: "Native" }) }, adapter: Adapter { inner: Core(CoreAdapter { context: ContextWgpuCore { type: "Native" }, id: AdapterId(0,1) }) }, device: Device { inner: Core(CoreDevice { context: ContextWgpuCore { type: "Native" }, id: DeviceId(0,1), error_sink: Mutex { data: ErrorSink }, features: Features { features_wgpu: FeaturesWGPU(POLYGON_MODE_LINE), features_webgpu: FeaturesWebGPU(0x0) } }) }, queue: Queue { inner: Core(CoreQueue { context: ContextWgpuCore { type: "Native" }, id: QueueId(0,1), error_sink: Mutex { data: ErrorSink } }) } }}: engine::engine: Creating new simulation engine
+2026-10-31T16:26:31.988655Z DEBUG new{gpu_context=GPUContext { instance: Instance { inner: Core(ContextWgpuCore { type: "Native" }) }, adapter: Adapter { inner: Core(CoreAdapter { context: ContextWgpuCore { type: "Native" }, id: AdapterId(0,1) }) }, device: Device { inner: Core(CoreDevice { context: ContextWgpuCore { type: "Native" }, id: DeviceId(0,1), error_sink: Mutex { data: ErrorSink }, features: Features { features_wgpu: FeaturesWGPU(POLYGON_MODE_LINE), features_webgpu: FeaturesWebGPU(0x0) } }) }, queue: Queue { inner: Core(CoreQueue { context: ContextWgpuCore { type: "Native" }, id: QueueId(0,1), error_sink: Mutex { data: ErrorSink } }) } }}: engine::state: Initializing simulation state
+2026-10-31T16:26:31.988684Z DEBUG engine::state::fields: Creating field with 262144 elements
+2026-10-31T16:26:31.988695Z DEBUG engine::state::fields: Dimensions: [512, 512]
+2026-10-31T16:26:31.988757Z DEBUG engine::state: Inserted new scalar field with id 0
+2026-10-31T16:26:31.988771Z DEBUG engine::state:  - SI Units:    m^-1 kg^1 s^-2 
+2026-10-31T16:26:31.988782Z DEBUG engine::state:  - Size:        [512, 512]
+2026-10-31T16:26:31.988797Z DEBUG engine::state::fields: Creating field with 262656 elements
+2026-10-31T16:26:31.988807Z DEBUG engine::state::fields: Dimensions: [513, 512]
+2026-10-31T16:26:31.988837Z DEBUG engine::state::fields: Creating field with 262656 elements
+2026-10-31T16:26:31.988848Z DEBUG engine::state::fields: Dimensions: [512, 513]
+2026-10-31T16:26:31.988873Z DEBUG engine::state: Inserted new scattered vector field with id 0
+2026-10-31T16:26:31.988889Z DEBUG engine::state:  - SI Units:    m^1 s^-1 
+2026-10-31T16:26:31.988898Z DEBUG engine::state:  - U Size:        [513, 512]
+2026-10-31T16:26:31.988908Z DEBUG engine::state:  - V Size:        [512, 513]
+2026-10-31T16:26:31.988919Z DEBUG engine::state::parameter_registry: Registered u32 parameter with id ParamID(0) and dimensions 
+2026-10-31T16:26:31.988931Z DEBUG engine::state::parameter_registry: Registered u32 parameter with id ParamID(1) and dimensions 
+2026-10-31T16:26:31.988944Z DEBUG engine::state::parameter_registry: Registered f32 parameter with id ParamID(2) and dimensions m^1 
+2026-10-31T16:26:31.988955Z DEBUG engine::state::parameter_registry: Registered f32 parameter with id ParamID(3) and dimensions m^1 
+2026-10-31T16:26:31.988968Z DEBUG engine::state::parameter_registry: Registered f32 parameter with id ParamID(4) and dimensions s^1 
+2026-10-31T16:26:32.177880Z DEBUG engine::state::fields: Creating field with 262144 elements
+2026-10-31T16:26:32.177923Z DEBUG engine::state::fields: Dimensions: [512, 512]
+2026-10-31T16:26:32.178030Z DEBUG engine::state: Inserted new scalar field with id 1
+2026-10-31T16:26:32.178037Z DEBUG engine::state:  - SI Units:    
+2026-10-31T16:26:32.178042Z DEBUG engine::state:  - Size:        [512, 512]
+2026-10-31T16:26:32.178290Z DEBUG engine::engine: Validating engine...
+2026-10-31T16:26:32.178313Z DEBUG engine::engine: Validation successfull!
+2026-10-31T16:26:32.183441Z DEBUG engine::engine: Executing kernel KernelID(0)
+2026-10-31T16:26:32.183524Z  INFO engine::gpu::kernel_resources: Updating buffer copy
+2026-10-31T16:26:32.184578Z DEBUG engine::engine: Done

@@ -2,7 +2,6 @@
 use std::{collections::HashMap, sync::Arc};
 
 use data::{
-    SimulationData,
     SimulationSettings,
     grid::Grid2D,
     ScalarField,
@@ -13,6 +12,11 @@ use wgpu::CommandEncoder;
 use crate::app::gpu_context::GPUContext;
 use gpu_backend::GPUSimulationEngine;
 use cpu_backend::CPUSimulationEngine;
+
+use engine::{
+    SimulationState,
+    SimulationEngine
+};
 
 pub mod cpu_backend;
 pub mod gpu_backend;
@@ -39,6 +43,7 @@ pub struct Simulation {
     gpu_context: Arc<GPUContext>,
     settings: SimulationSettings,
     state: SimulationData,
+    engine: SimulationEngine,
     pub grid: Grid2D,
     backend: Option<Box<dyn SimulationBackend>>,
 }

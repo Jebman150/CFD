@@ -2,9 +2,9 @@ use std::sync::Arc;
 
 use anyhow::Error;
 use tracing::instrument;
-use wgpu::{CommandBuffer, CommandEncoderDescriptor};
+use wgpu::{CommandEncoder, CommandEncoderDescriptor};
 
-use crate::{GPUContext, SimulationState, engine::operations::KernelOperation, gpu::kernel::{self, ComputeKernel}};
+use crate::{GPUContext, SimulationState, engine::operations::KernelOperation, gpu::kernel::ComputeKernel};
 
 pub mod operations;
 
@@ -21,7 +21,7 @@ pub struct SimulationEngine {
 impl SimulationEngine {
     #[instrument]
     pub fn new(gpu_context: &Arc<GPUContext>) -> Self {
-        tracing::info!("Creating new simulation engine");
+        tracing::debug!("Creating new simulation engine");
         Self {
             gpu_context: gpu_context.clone(),
             operations: Vec::new(),
@@ -39,11 +39,11 @@ impl SimulationEngine {
     }
 
     pub fn validate(&mut self, state: &SimulationState) -> anyhow::Result<()> {
-        tracing::info!("Validating engine...");
+        tracing::debug!("Validating engine...");
         for k in &self.operations {
             k.validate(state)?;
         }
-        tracing::info!("Validation successfull!");
+        tracing::debug!("Validation successfull!");
         self.is_validated = true;
         Ok(())
     }
@@ -55,7 +55,7 @@ impl SimulationEngine {
 
         for operation in &self.operations {
             self.pipeline.push(
-                operation.create_kernel(&self.gpu_context.device, state)?
+                operation.create_kernel(&self.gpu_context, state)?
             );
         }
 
@@ -63,50 +63,29 @@ impl SimulationEngine {
     }
 
     pub fn execute_kernel(&self, state: &SimulationState, kernel_id: KernelID) -> anyhow::Result<()> {
-        tracing::info!("Executing kernel {:?}", kernel_id);
+        tracing::debug!("Executing kernel {:?}", kernel_id);
         let Some(kernel) = self.pipeline.get(kernel_id.0) else {
             return Err(Error::msg(format!("Could not find kernel with id {:?}", kernel_id)));
         };
 
-        let Some(parameter_layout) = self.operations.get(kernel_id.0).map(|op| op.get_param_layout()) else {
-            return Err(Error::msg(format!("Could not find parameter layout for kernel with id {:?}", kernel_id)));
-        };
-
-        let params = state.parameter_ref();
-
-        let param_u32_vec = parameter_layout.get_u32_params().iter()
-            .map(|id| params.get_param_u32(id.clone()).unwrap())
-            .collect::<Vec<u32>>();
-
-        let param_f32_vec = parameter_layout.get_f32_params().iter()
-            .map(|id| params.get_param_f32(id.clone()).unwrap())
-            .collect::<Vec<f32>>();
-
-        let buffers = kernel.get_helper_buffer();
-        let u32_buffer = &buffers[0];
-        let f32_buffer = &buffers[1];
-
-        self.gpu_context.queue.write_buffer(
-            u32_buffer,
-            0,
-            bytemuck::cast_slice(&param_u32_vec)
-        );
-
-        self.gpu_context.queue.write_buffer(
-            f32_buffer,
-            0,
-            bytemuck::cast_slice(&param_f32_vec)
-        );
-
-        // update parameters
-
         let mut encoder = self.gpu_context.device.create_command_encoder(&CommandEncoderDescriptor{
             label: Some(&format!("Single kernel ({:?}) execution encoder", kernel_id)),
         });
+
+        kernel.update_resources(state, &mut encoder);
         kernel.encode(&mut encoder)?;
 
         self.gpu_context.queue.submit([encoder.finish()]);
-        tracing::info!("Done");
+        tracing::debug!("Done");
+        Ok(())
+    }
+
+    pub fn encode(&self, state: &SimulationState, encoder: &mut CommandEncoder) -> anyhow::Result<()> {
+        for k in &self.pipeline {
+            k.update_resources(state, encoder);
+
+            k.encode(encoder)?;
+        }
         Ok(())
     }
 }

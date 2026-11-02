@@ -22,7 +22,7 @@ fn test_engine_compute_divergence(
     #[case] grid_size: [usize; 2],
     #[case] seed: u64
 ) -> anyhow::Result<()> {
-    common::with_test_tracing(function_name!(), || {
+    common::with_test_tracing(&format!("{}{:?}", function_name!(), grid_size), || {
         use crate::common::assertions;
 
         let [nx, ny] = grid_size;
@@ -35,7 +35,6 @@ fn test_engine_compute_divergence(
 
         let (u, v) = random_init::generate_random_mac_velocity(grid_size, seed);
 
-        // Initialize the two MAC velocity components.
         match state.get_vector_field(vel)? {
             VectorFieldStorage::Scattered(fields) => {
                 fields[0].write_buffer(&gpu_context.queue, &u);
@@ -44,7 +43,6 @@ fn test_engine_compute_divergence(
             _ => anyhow::bail!("Expected scattered velocity field"),
         }
 
-        // Expected CPU result.
         let dx_value = state.parameter_ref().get_param_f32(dx)?;
         let dy_value = state.parameter_ref().get_param_f32(dy)?;
 
@@ -76,13 +74,13 @@ fn test_engine_compute_divergence(
         engine.build_pipeline(&state)?;
         engine.execute_kernel(&state, div_kernel)?;
 
-        // GPU readback.
         let actual = state
             .get_scalar_field(divergence)?
             .read_buffer(&gpu_context.device, &gpu_context.queue)
             .block_on()?;
 
         assertions::assert_approximately_equal(
+            &format!("divergence_{:?}", grid_size),
             &actual,
             &expected,
             1e-5,

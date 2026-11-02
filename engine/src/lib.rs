@@ -14,3 +14,4 @@ pub use gpu::kernel::ParameterLayout;
 
 pub use engine::operations::divergence::DivergenceOperator;
 pub use engine::operations::advection::ScalarAdvectionOperator;
+pub use engine::operations::advection::ScatteredVectorAdvectionOperator;

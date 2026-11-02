@@ -34,7 +34,7 @@ impl ParameterRegistry {
             id, Parameter { value, si_unit: units }
         );
         self.param_id_counter += 1;
-        tracing::info!("Registered f32 parameter with id {:?} and dimensions {}", id, units);
+        tracing::debug!("Registered f32 parameter with id {:?} and dimensions {}", id, units);
         id
     }
 
@@ -44,7 +44,7 @@ impl ParameterRegistry {
             id, Parameter { value, si_unit: units }
         );
         self.param_id_counter += 1;
-        tracing::info!("Registered u32 parameter with id {:?} and dimensions {}", id, units);
+        tracing::debug!("Registered u32 parameter with id {:?} and dimensions {}", id, units);
         id
     }
 

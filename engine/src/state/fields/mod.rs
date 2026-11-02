@@ -49,6 +49,10 @@ impl SIUnitDimensions {
         [0, 0, 1, 0, 0, 0, 0]
     );
 
+    pub const DENSITY: Self = Self(
+        [-3, 1, 0, 0, 0, 0, 0]
+    );
+
     /// Divergence is computed as the
     /// spacial derivative, therefore
     /// the spacial dimension is decreased
@@ -82,6 +86,8 @@ impl Field {
         T: bytemuck::Pod
     {
         let total_element_num = layout.total_count();
+        tracing::debug!("Creating field with {} elements", total_element_num);
+        tracing::debug!("Dimensions: {:?}", layout.dimensions());
         Self {
             metadata: FieldMetadata { si_unit, layout },
             data: gpu::init_helper::create_storage_buffer::<T>(device, "Field buffer", total_element_num)

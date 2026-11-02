@@ -22,6 +22,17 @@ impl ParameterRequirementLayout {
             }
         }
 
+        for (requirement, lookup_result) in self.f32_requirements.iter()
+            .zip(layout.get_f32_params().iter()
+                .map(|id| registry.get_param_f32_units(id.clone()))
+            )
+        {
+            let found_unit = lookup_result?;
+            if requirement.units != found_unit {
+                return Err(Error::msg(format!("Parameter layout requirement {} not met: {} != {}", requirement.name, requirement.units, found_unit)));
+            }
+        }
+
         Ok(())
     }
 }

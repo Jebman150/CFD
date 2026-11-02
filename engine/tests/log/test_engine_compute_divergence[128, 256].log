@@ -1,0 +1,58 @@
+2026-10-31T16:24:57.739429Z  INFO integration_test::kernels::divergence: Testing divergence kernel for case [128, 256], seed 9999
+2026-10-31T16:24:57.739554Z DEBUG new{gpu_context=GPUContext { instance: Instance { inner: Core(ContextWgpuCore { type: "Native" }) }, adapter: Adapter { inner: Core(CoreAdapter { context: ContextWgpuCore { type: "Native" }, id: AdapterId(0,1) }) }, device: Device { inner: Core(CoreDevice { context: ContextWgpuCore { type: "Native" }, id: DeviceId(0,1), error_sink: Mutex { data: ErrorSink }, features: Features { features_wgpu: FeaturesWGPU(POLYGON_MODE_LINE), features_webgpu: FeaturesWebGPU(0x0) } }) }, queue: Queue { inner: Core(CoreQueue { context: ContextWgpuCore { type: "Native" }, id: QueueId(0,1), error_sink: Mutex { data: ErrorSink } }) } }}: engine::engine: Creating new simulation engine
+2026-10-31T16:24:57.739595Z DEBUG new{gpu_context=GPUContext { instance: Instance { inner: Core(ContextWgpuCore { type: "Native" }) }, adapter: Adapter { inner: Core(CoreAdapter { context: ContextWgpuCore { type: "Native" }, id: AdapterId(0,1) }) }, device: Device { inner: Core(CoreDevice { context: ContextWgpuCore { type: "Native" }, id: DeviceId(0,1), error_sink: Mutex { data: ErrorSink }, features: Features { features_wgpu: FeaturesWGPU(POLYGON_MODE_LINE), features_webgpu: FeaturesWebGPU(0x0) } }) }, queue: Queue { inner: Core(CoreQueue { context: ContextWgpuCore { type: "Native" }, id: QueueId(0,1), error_sink: Mutex { data: ErrorSink } }) } }}: engine::state: Initializing simulation state
+2026-10-31T16:24:57.739615Z DEBUG engine::state::fields: Creating field with 32768 elements
+2026-10-31T16:24:57.739624Z DEBUG engine::state::fields: Dimensions: [128, 256]
+2026-10-31T16:24:57.739691Z DEBUG engine::state: Inserted new scalar field with id 0
+2026-10-31T16:24:57.739700Z DEBUG engine::state:  - SI Units:    m^-1 kg^1 s^-2 
+2026-10-31T16:24:57.739707Z DEBUG engine::state:  - Size:        [128, 256]
+2026-10-31T16:24:57.739715Z DEBUG engine::state::fields: Creating field with 33024 elements
+2026-10-31T16:24:57.739722Z DEBUG engine::state::fields: Dimensions: [129, 256]
+2026-10-31T16:24:57.739742Z DEBUG engine::state::fields: Creating field with 32896 elements
+2026-10-31T16:24:57.739749Z DEBUG engine::state::fields: Dimensions: [128, 257]
+2026-10-31T16:24:57.739765Z DEBUG engine::state: Inserted new scattered vector field with id 0
+2026-10-31T16:24:57.739775Z DEBUG engine::state:  - SI Units:    m^1 s^-1 
+2026-10-31T16:24:57.739784Z DEBUG engine::state:  - U Size:        [129, 256]
+2026-10-31T16:24:57.739790Z DEBUG engine::state:  - V Size:        [128, 257]
+2026-10-31T16:24:57.739798Z DEBUG engine::state::parameter_registry: Registered u32 parameter with id ParamID(0) and dimensions 
+2026-10-31T16:24:57.739807Z DEBUG engine::state::parameter_registry: Registered u32 parameter with id ParamID(1) and dimensions 
+2026-10-31T16:24:57.739815Z DEBUG engine::state::parameter_registry: Registered f32 parameter with id ParamID(2) and dimensions m^1 
+2026-10-31T16:24:57.739824Z DEBUG engine::state::parameter_registry: Registered f32 parameter with id ParamID(3) and dimensions m^1 
+2026-10-31T16:24:58.344868Z DEBUG engine::state::fields: Creating field with 32768 elements
+2026-10-31T16:24:58.344896Z DEBUG engine::state::fields: Dimensions: [128, 256]
+2026-10-31T16:24:58.344999Z DEBUG engine::state: Inserted new scalar field with id 1
+2026-10-31T16:24:58.345009Z DEBUG engine::state:  - SI Units:    s^-1 
+2026-10-31T16:24:58.345020Z DEBUG engine::state:  - Size:        [128, 256]
+2026-10-31T16:24:58.345028Z DEBUG engine::engine: Validating engine...
+2026-10-31T16:24:58.345047Z DEBUG engine::engine: Validation successfull!
+2026-10-31T16:24:58.427511Z DEBUG engine::engine: Executing kernel KernelID(0)
+2026-10-31T16:24:58.527175Z DEBUG engine::engine: Done
+2026-10-31T16:26:30.656128Z  INFO integration_test::kernels::divergence: Testing divergence kernel for case [128, 256], seed 9999
+2026-10-31T16:26:30.656355Z DEBUG new{gpu_context=GPUContext { instance: Instance { inner: Core(ContextWgpuCore { type: "Native" }) }, adapter: Adapter { inner: Core(CoreAdapter { context: ContextWgpuCore { type: "Native" }, id: AdapterId(0,1) }) }, device: Device { inner: Core(CoreDevice { context: ContextWgpuCore { type: "Native" }, id: DeviceId(0,1), error_sink: Mutex { data: ErrorSink }, features: Features { features_wgpu: FeaturesWGPU(POLYGON_MODE_LINE), features_webgpu: FeaturesWebGPU(0x0) } }) }, queue: Queue { inner: Core(CoreQueue { context: ContextWgpuCore { type: "Native" }, id: QueueId(0,1), error_sink: Mutex { data: ErrorSink } }) } }}: engine::engine: Creating new simulation engine
+2026-10-31T16:26:30.656433Z DEBUG new{gpu_context=GPUContext { instance: Instance { inner: Core(ContextWgpuCore { type: "Native" }) }, adapter: Adapter { inner: Core(CoreAdapter { context: ContextWgpuCore { type: "Native" }, id: AdapterId(0,1) }) }, device: Device { inner: Core(CoreDevice { context: ContextWgpuCore { type: "Native" }, id: DeviceId(0,1), error_sink: Mutex { data: ErrorSink }, features: Features { features_wgpu: FeaturesWGPU(POLYGON_MODE_LINE), features_webgpu: FeaturesWebGPU(0x0) } }) }, queue: Queue { inner: Core(CoreQueue { context: ContextWgpuCore { type: "Native" }, id: QueueId(0,1), error_sink: Mutex { data: ErrorSink } }) } }}: engine::state: Initializing simulation state
+2026-10-31T16:26:30.656458Z DEBUG engine::state::fields: Creating field with 32768 elements
+2026-10-31T16:26:30.656467Z DEBUG engine::state::fields: Dimensions: [128, 256]
+2026-10-31T16:26:30.656556Z DEBUG engine::state: Inserted new scalar field with id 0
+2026-10-31T16:26:30.656564Z DEBUG engine::state:  - SI Units:    m^-1 kg^1 s^-2 
+2026-10-31T16:26:30.656573Z DEBUG engine::state:  - Size:        [128, 256]
+2026-10-31T16:26:30.656581Z DEBUG engine::state::fields: Creating field with 33024 elements
+2026-10-31T16:26:30.656588Z DEBUG engine::state::fields: Dimensions: [129, 256]
+2026-10-31T16:26:30.656609Z DEBUG engine::state::fields: Creating field with 32896 elements
+2026-10-31T16:26:30.656616Z DEBUG engine::state::fields: Dimensions: [128, 257]
+2026-10-31T16:26:30.656636Z DEBUG engine::state: Inserted new scattered vector field with id 0
+2026-10-31T16:26:30.656643Z DEBUG engine::state:  - SI Units:    m^1 s^-1 
+2026-10-31T16:26:30.656651Z DEBUG engine::state:  - U Size:        [129, 256]
+2026-10-31T16:26:30.656658Z DEBUG engine::state:  - V Size:        [128, 257]
+2026-10-31T16:26:30.656670Z DEBUG engine::state::parameter_registry: Registered u32 parameter with id ParamID(0) and dimensions 
+2026-10-31T16:26:30.656683Z DEBUG engine::state::parameter_registry: Registered u32 parameter with id ParamID(1) and dimensions 
+2026-10-31T16:26:30.656694Z DEBUG engine::state::parameter_registry: Registered f32 parameter with id ParamID(2) and dimensions m^1 
+2026-10-31T16:26:30.656705Z DEBUG engine::state::parameter_registry: Registered f32 parameter with id ParamID(3) and dimensions m^1 
+2026-10-31T16:26:30.733762Z DEBUG engine::state::fields: Creating field with 32768 elements
+2026-10-31T16:26:30.733787Z DEBUG engine::state::fields: Dimensions: [128, 256]
+2026-10-31T16:26:30.733832Z DEBUG engine::state: Inserted new scalar field with id 1
+2026-10-31T16:26:30.733842Z DEBUG engine::state:  - SI Units:    s^-1 
+2026-10-31T16:26:30.733849Z DEBUG engine::state:  - Size:        [128, 256]
+2026-10-31T16:26:30.733858Z DEBUG engine::engine: Validating engine...
+2026-10-31T16:26:30.733873Z DEBUG engine::engine: Validation successfull!
+2026-10-31T16:26:30.928810Z DEBUG engine::engine: Executing kernel KernelID(0)
+2026-10-31T16:26:31.706069Z DEBUG engine::engine: Done

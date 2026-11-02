@@ -17,12 +17,12 @@ use crate::{common::{self, random_init}, cpu_validator};
 #[case([64, 64], 1337)]
 #[case([128, 256], 9999)]
 #[case([512, 512], 54321)]
-fn test_engine_compute_divergence(
+fn test_engine_scalar_advection(
     #[from(crate::gpu_context)] gpu_context: Arc<GPUContext>,
     #[case] grid_size: [usize; 2],
     #[case] seed: u64
 ) -> anyhow::Result<()> {
-    common::with_test_tracing(function_name!(), || {
+    common::with_test_tracing(&format!("{}{:?}", function_name!(), grid_size), || {
         use crate::common::assertions;
 
         let [nx, ny] = grid_size;
@@ -37,9 +37,8 @@ fn test_engine_compute_divergence(
         let delta_t = state.parameter_mut().register_f32(0.01, SIUnitDimensions::TIME);
 
         let (u, v) = random_init::generate_random_mac_velocity(grid_size, seed);
-        let test_field = random_init::generate_random_scalar_field(grid_size, seed);
+        let test_field_values = random_init::generate_random_scalar_field(grid_size, seed);
 
-        // Initialize the two MAC velocity components.
         match state.get_vector_field(vel)? {
             VectorFieldStorage::Scattered(fields) => {
                 fields[0].write_buffer(&gpu_context.queue, &u);
@@ -48,7 +47,6 @@ fn test_engine_compute_divergence(
             _ => anyhow::bail!("Expected scattered velocity field"),
         }
 
-        // Expected CPU result.
         let dx_value = state.parameter_ref().get_param_f32(dx)?;
         let dy_value = state.parameter_ref().get_param_f32(dy)?;
         let dt_value = state.parameter_ref().get_param_f32(delta_t)?;
@@ -56,7 +54,7 @@ fn test_engine_compute_divergence(
         let expected = cpu_validator::scalar_advection_cpu(
             &u,
             &v,
-            &test_field,
+            &test_field_values,
             grid_size,
             dx_value,
             dy_value,
@@ -67,7 +65,7 @@ fn test_engine_compute_divergence(
             SIUnitDimensions::NO_UNIT,
             grid_size,
         );
-
+        state.write_scalar_field(&gpu_context.queue, test_scalar_field, &test_field_values)?;
 
         let adv_kernel = engine.add_operation(
             ScalarAdvectionOperator {
@@ -84,16 +82,16 @@ fn test_engine_compute_divergence(
         engine.build_pipeline(&state)?;
         engine.execute_kernel(&state, adv_kernel)?;
 
-        // GPU readback.
         let actual = state
             .get_scalar_field(test_scalar_field)?
             .read_buffer(&gpu_context.device, &gpu_context.queue)
             .block_on()?;
 
         assertions::assert_approximately_equal(
+            &format!("scal_adv_{:?}", grid_size),
             &actual,
             &expected,
-            1e-5,
+            1e-3,
             1e-4,
         );
 

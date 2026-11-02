@@ -4,6 +4,7 @@ use tracing::{Level, event, instrument};
 
 pub mod init_helper;
 pub mod kernel;
+pub mod kernel_resources;
 
 #[derive(Debug)]
 pub struct GPUContext {
@@ -16,7 +17,7 @@ pub struct GPUContext {
 impl GPUContext {
     #[instrument]
     pub async fn new() -> anyhow::Result<Self> {
-        event!(Level::INFO, "Creating GPU instance");
+        event!(Level::DEBUG, "Creating GPU instance");
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
             backends: wgpu::Backends::VULKAN,
             flags: Default::default(),
@@ -29,7 +30,7 @@ impl GPUContext {
             .request_adapter(&wgpu::RequestAdapterOptions::default())
             .await?;
 
-        event!(Level::INFO, "Found GPU adapter");
+        event!(Level::DEBUG, "Found GPU adapter");
 
         let (device, queue) = adapter
             .request_device(&wgpu::DeviceDescriptor {
@@ -38,7 +39,7 @@ impl GPUContext {
             })
             .await?;
 
-        event!(Level::INFO, "Found GPU device");
+        event!(Level::DEBUG, "Found GPU device");
 
         Ok(Self {
             instance: instance,

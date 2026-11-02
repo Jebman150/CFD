@@ -1,10 +1,11 @@
 use std::{collections::HashMap, hash::Hash, sync::Arc};
 
 use anyhow::Error;
+use pollster::FutureExt;
 use tracing::instrument;
 use wgpu::{Device, Queue};
 
-use crate::{GPUContext, ParamID, state::{fields::{Field, FieldMetadata, SIUnitDimensions, VectorFieldStorage}, parameter_registry::ParameterRegistry}};
+use crate::{GPUContext, ParamID, state::{fields::{Field, FieldMetadata, SIUnitDimensions, VectorFieldStorage, layout::GridLayout}, parameter_registry::ParameterRegistry}};
 
 pub mod fields;
 pub mod parameter_registry;
@@ -33,7 +34,7 @@ pub struct SimulationState {
 impl SimulationState {
     #[instrument]
     pub fn new(gpu_context: &Arc<GPUContext>) -> anyhow::Result<Self> {
-        tracing::info!("Initializing simulation state");
+        tracing::debug!("Initializing simulation state");
         Ok(Self {
             gpu_device: gpu_context.device.clone(),
             parameters: ParameterRegistry::new(),
@@ -49,9 +50,9 @@ impl SimulationState {
         let new_id = ScalarFieldID(self.scalar_id_counter);
         let layout = fields::layout::ScalarLayout::new(size);
         self.scalar_fields.insert(new_id, Field::new::<f32>(&self.gpu_device, si_units, Box::new(layout)));
-        tracing::info!("Inserted new scalar field with id {}", new_id.0);
-        tracing::info!(" - SI Units:    {}", si_units);
-        tracing::info!(" - Size:        {:?}", size);
+        tracing::debug!("Inserted new scalar field with id {}", new_id.0);
+        tracing::debug!(" - SI Units:    {}", si_units);
+        tracing::debug!(" - Size:        {:?}", size);
         self.scalar_id_counter += 1;
         new_id
     }
@@ -63,9 +64,9 @@ impl SimulationState {
             Field::new::<[f32; 2]>(&self.gpu_device, si_units, Box::new(layout))
         ));
 
-        tracing::info!("Inserted new collocated vector field with id {}", new_id.0);
-        tracing::info!(" - SI Units:    {}", si_units);
-        tracing::info!(" - Size:        {:?}", size);
+        tracing::debug!("Inserted new collocated vector field with id {}", new_id.0);
+        tracing::debug!(" - SI Units:    {}", si_units);
+        tracing::debug!(" - Size:        {:?}", size);
         self.vector_id_counter += 1;
         new_id
     }
@@ -73,25 +74,21 @@ impl SimulationState {
     pub fn add_scattered_vector_field(&mut self, si_units: SIUnitDimensions, size: [usize; 2]) -> VectorFieldID {
         let new_id = VectorFieldID(self.vector_id_counter);
 
-        let mut u_dim = size;
-        u_dim[0] += 1;
-        let u_layout = fields::layout::VectorLayout::new(u_dim, 0);
-        let mut v_dim = size;
-        v_dim[1] += 1;
-        let v_layout = fields::layout::VectorLayout::new(v_dim, 1);
+        let u_layout = fields::layout::VectorLayout::new(size, 0);
+        let v_layout = fields::layout::VectorLayout::new(size, 1);
 
         self.vector_fields.insert(
             new_id,
             VectorFieldStorage::Scattered([
-                Field::new::<f32>(&self.gpu_device, si_units, Box::new(u_layout)),
-                Field::new::<f32>(&self.gpu_device, si_units, Box::new(v_layout)),
+                Field::new::<f32>(&self.gpu_device, si_units, Box::new(u_layout.clone())),
+                Field::new::<f32>(&self.gpu_device, si_units, Box::new(v_layout.clone())),
             ])
         );
 
-        tracing::info!("Inserted new scattered vector field with id {}", new_id.0);
-        tracing::info!(" - SI Units:    {}", si_units);
-        tracing::info!(" - U Size:        {:?}", u_dim);
-        tracing::info!(" - V Size:        {:?}", v_dim);
+        tracing::debug!("Inserted new scattered vector field with id {}", new_id.0);
+        tracing::debug!(" - SI Units:    {}", si_units);
+        tracing::debug!(" - U Size:        {:?}", u_layout.dimensions());
+        tracing::debug!(" - V Size:        {:?}", v_layout.dimensions());
         self.vector_id_counter += 1;
         new_id
     }
@@ -138,52 +135,14 @@ impl SimulationState {
         let Some(field) = self.scalar_fields.get(&id) else {
             return Err(Error::msg(format!("Could not find scalar field with id {:?}", id)));
         };
+        field.read_buffer(&self.gpu_device, queue).await
+    }
 
-        let staging_buffer = self.gpu_device.create_buffer(
-            &wgpu::BufferDescriptor {
-                label: Some("Readback staging buffer"),
-                size: field.get_buffer_ref().size(),
-                usage: wgpu::BufferUsages::COPY_DST
-                    | wgpu::BufferUsages::MAP_READ,
-                mapped_at_creation: false,
-            },
-        );
-
-        let mut encoder = self.gpu_device.create_command_encoder(
-            &wgpu::CommandEncoderDescriptor {
-                label: Some("Readback encoder"),
-            },
-        );
-
-        encoder.copy_buffer_to_buffer(
-            field.get_buffer_ref(),
-            0,
-            &staging_buffer,
-            0,
-            staging_buffer.size(),
-        );
-
-        queue.submit(Some(encoder.finish()));
-
-        let slice = staging_buffer.slice(..);
-
-        let (tx, rx) = std::sync::mpsc::channel();
-
-        slice.map_async(wgpu::MapMode::Read, move |result| {
-            tx.send(result).unwrap();
-        });
-
-        self.gpu_device.poll(wgpu::wgt::PollType::Wait { submission_index: None, timeout: None })?;
-
-        rx.recv()??;
-
-        let mapped = slice.get_mapped_range()?;
-
-        let result = bytemuck::cast_slice::<u8, f32>(&mapped).to_vec();
-
-        drop(mapped);
-        staging_buffer.unmap();
-
-        Ok(result)
+    pub fn write_scalar_field(&self, queue: &Arc<Queue>, id: ScalarFieldID, data: &[f32]) -> anyhow::Result<()> {
+        let Some(field) = self.scalar_fields.get(&id) else {
+            return Err(Error::msg(format!("Could not find scalar field with id {:?}", id)));
+        };
+        field.write_buffer(queue, data);
+        Ok(())
     }
 }

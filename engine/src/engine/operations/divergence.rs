@@ -1,9 +1,8 @@
 use std::sync::Arc;
 
 use anyhow::Error;
-use wgpu::Device;
 
-use crate::{ParameterLayout, SIUnitDimensions, ScalarFieldID, SimulationState, VectorFieldID, VectorFieldStorage::{Collocated, Scattered}, engine::operations::{KernelOperation, parameter_validation::{ParameterRequirement, ParameterRequirementLayout}}, gpu::{init_helper, kernel::{ComputeKernel, LeafKernel}}, state::fields::Field};
+use crate::{GPUContext, ParameterLayout, SIUnitDimensions, ScalarFieldID, SimulationState, VectorFieldID, VectorFieldStorage::{Collocated, Scattered}, engine::operations::{KernelOperation, parameter_validation::{ParameterRequirement, ParameterRequirementLayout}}, gpu::{init_helper, kernel::{ComputeKernel, LeafKernel}, kernel_resources::ParameterResource}, state::fields::Field};
 
 
 
@@ -55,11 +54,11 @@ impl KernelOperation for DivergenceOperator {
         Ok(())
     }
     
-    fn create_kernel(&self, device: &Arc<Device>, state: &SimulationState) -> anyhow::Result<Box<dyn ComputeKernel>> {
+    fn create_kernel(&self, gpu_context: &Arc<GPUContext>, state: &SimulationState) -> anyhow::Result<Box<dyn ComputeKernel>> {
         let output_field = state.get_scalar_field(self.output)?;
 
         match state.get_vector_field(self.input)? {
-            Scattered(input_fields) => divergence_op_scattered_input(device, &self.parameter_layout, input_fields, output_field),
+            Scattered(input_fields) => divergence_op_scattered_input(gpu_context, &self.parameter_layout, input_fields, output_field),
             Collocated(_input_field) => todo!(),
         }
     }
@@ -69,10 +68,7 @@ impl KernelOperation for DivergenceOperator {
     }    
 }
 
-fn divergence_op_scattered_input(device: &Arc<Device>, parameter_layout: &ParameterLayout, input_fields: &[Field; 2], output: &Field) -> anyhow::Result<Box<dyn ComputeKernel>> {
-    let u32_params = parameter_layout.create_u32_buffers(device);
-    let f32_params = parameter_layout.create_f32_buffer(device);
-
+fn divergence_op_scattered_input(gpu_context: &Arc<GPUContext>, parameter_layout: &ParameterLayout, input_fields: &[Field; 2], output: &Field) -> anyhow::Result<Box<dyn ComputeKernel>> {
     let mut layout_buffer_entries = Vec::new();
     init_helper::add_layout_buffer(&mut layout_buffer_entries, 0, true);
     init_helper::add_layout_buffer(&mut layout_buffer_entries, 1, true);
@@ -80,9 +76,11 @@ fn divergence_op_scattered_input(device: &Arc<Device>, parameter_layout: &Parame
     init_helper::add_layout_buffer(&mut layout_buffer_entries, 3, true);
     init_helper::add_layout_buffer(&mut layout_buffer_entries, 4, true);
 
+    let parameters = ParameterResource::new(gpu_context, parameter_layout.clone());
+
     Ok(Box::new(LeafKernel::new("Divergence computation")
         .build_pipeline(
-            device,
+            &gpu_context.device,
             "shaders/divergence_computation.wgsl",
             "compute_divergence",
             &layout_buffer_entries,
@@ -90,12 +88,11 @@ fn divergence_op_scattered_input(device: &Arc<Device>, parameter_layout: &Parame
                 (0, input_fields[0].get_buffer_ref()),
                 (1, input_fields[1].get_buffer_ref()),
                 (2, output.get_buffer_ref()),
-                (3, &u32_params),
-                (4, &f32_params)
+                (3, parameters.get_u32_buffer_ref()),
+                (4, parameters.get_f32_buffer_ref())
             ],
             (input_fields[0].get_buffer_ref().size() + input_fields[1].get_buffer_ref().size()) / std::mem::size_of::<f32>() as u64
         )?
-        .save_helper_buffer(u32_params)
-        .save_helper_buffer(f32_params)
+        .add_parameter_resource(parameters)
     ))
 }
